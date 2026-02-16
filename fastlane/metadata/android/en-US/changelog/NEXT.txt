@@ -1,0 +1,2 @@
+Bug fixes + maintenance:
+* Fix crash in settings when fragment is detached during backup/restore or log operations

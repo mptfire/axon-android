@@ -621,13 +621,17 @@ class SettingsActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPrefere
                             BACKUP_EVERYTHING_NO_USERS -> backuper.backup(uri, withUsers = false)
                             BACKUP_SETTINGS_ONLY -> backuper.backup(uri, withUsers = false, withSubscriptions = false)
                         }
-                        requireActivity().runOnUiThread {
-                            Toast.makeText(context, getString(R.string.settings_backup_restore_backup_successful), Toast.LENGTH_LONG).show()
+                        activity?.let { act ->
+                            act.runOnUiThread {
+                                Toast.makeText(act, getString(R.string.settings_backup_restore_backup_successful), Toast.LENGTH_LONG).show()
+                            }
                         }
                     } catch (e: Exception) {
                         Log.w(TAG, "Backup failed", e)
-                        requireActivity().runOnUiThread {
-                            Toast.makeText(context, getString(R.string.settings_backup_restore_backup_failed, e.message), Toast.LENGTH_LONG).show()
+                        activity?.let { act ->
+                            act.runOnUiThread {
+                                Toast.makeText(act, getString(R.string.settings_backup_restore_backup_failed, e.message), Toast.LENGTH_LONG).show()
+                            }
                         }
                     }
                 }
@@ -659,18 +663,22 @@ class SettingsActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPrefere
                     try {
                         val currentDarkMode = repository.getDarkMode()
                         backuper.restore(uri)
-                        requireActivity().runOnUiThread {
-                            Toast.makeText(context, getString(R.string.settings_backup_restore_restore_successful), Toast.LENGTH_LONG).show()
-                            requireActivity().recreate()
-                            val newDarkMode = repository.getDarkMode()
-                            if (newDarkMode != currentDarkMode) {
-                                AppCompatDelegate.setDefaultNightMode(newDarkMode)
+                        activity?.let { act ->
+                            act.runOnUiThread {
+                                Toast.makeText(act, getString(R.string.settings_backup_restore_restore_successful), Toast.LENGTH_LONG).show()
+                                act.recreate()
+                                val newDarkMode = repository.getDarkMode()
+                                if (newDarkMode != currentDarkMode) {
+                                    AppCompatDelegate.setDefaultNightMode(newDarkMode)
+                                }
                             }
                         }
                     } catch (e: Exception) {
                         Log.w(TAG, "Restore failed", e)
-                        requireActivity().runOnUiThread {
-                            Toast.makeText(context, getString(R.string.settings_backup_restore_restore_failed, e.message), Toast.LENGTH_LONG).show()
+                        activity?.let { act ->
+                            act.runOnUiThread {
+                                Toast.makeText(act, getString(R.string.settings_backup_restore_restore_failed, e.message), Toast.LENGTH_LONG).show()
+                            }
                         }
                     }
                 }
@@ -747,16 +755,18 @@ class SettingsActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPrefere
             lifecycleScope.launch(Dispatchers.IO) {
                 val context = context ?: return@launch
                 val log = Log.getFormatted(context, scrub = scrub)
-                requireActivity().runOnUiThread {
-                    val clipboard = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
-                    val clip = ClipData.newPlainText("ntfy logs", log)
-                    clipboard.setPrimaryClip(clip)
-                    if (scrub) {
-                        showScrubDialog(getString(R.string.settings_advanced_export_logs_copied_logs))
-                    } else {
-                        Toast
-                            .makeText(context, getString(R.string.settings_advanced_export_logs_copied_logs), Toast.LENGTH_LONG)
-                            .show()
+                activity?.let { act ->
+                    act.runOnUiThread {
+                        val clipboard = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+                        val clip = ClipData.newPlainText("ntfy logs", log)
+                        clipboard.setPrimaryClip(clip)
+                        if (scrub) {
+                            showScrubDialog(getString(R.string.settings_advanced_export_logs_copied_logs))
+                        } else {
+                            Toast
+                                .makeText(context, getString(R.string.settings_advanced_export_logs_copied_logs), Toast.LENGTH_LONG)
+                                .show()
+                        }
                     }
                 }
             }
@@ -768,10 +778,12 @@ class SettingsActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPrefere
                 val context = context ?: return@launch
                 val log = Log.getFormatted(context, scrub = scrub)
                 if (log.length > EXPORT_LOGS_UPLOAD_NOTIFY_SIZE_THRESHOLD) {
-                    requireActivity().runOnUiThread {
-                        Toast
-                            .makeText(context, getString(R.string.settings_advanced_export_logs_uploading), Toast.LENGTH_SHORT)
-                            .show()
+                    activity?.let { act ->
+                        act.runOnUiThread {
+                            Toast
+                                .makeText(context, getString(R.string.settings_advanced_export_logs_uploading), Toast.LENGTH_SHORT)
+                                .show()
+                        }
                     }
                 }
                 val gson = Gson()
@@ -788,25 +800,29 @@ class SettingsActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPrefere
                         if (body.isEmpty()) throw Exception("Return body is empty")
                         Log.d(TAG, "Logs uploaded successfully: $body")
                         val resp = gson.fromJson(body, NopasteResponse::class.java)
-                        requireActivity().runOnUiThread {
-                            val clipboard = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
-                            val clip = ClipData.newPlainText("logs URL", resp.url)
-                            clipboard.setPrimaryClip(clip)
-                            if (scrub) {
-                                showScrubDialog(getString(R.string.settings_advanced_export_logs_copied_url))
-                            } else {
-                                Toast
-                                    .makeText(context, getString(R.string.settings_advanced_export_logs_copied_url), Toast.LENGTH_LONG)
-                                    .show()
+                        activity?.let { act ->
+                            act.runOnUiThread {
+                                val clipboard = context.getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+                                val clip = ClipData.newPlainText("logs URL", resp.url)
+                                clipboard.setPrimaryClip(clip)
+                                if (scrub) {
+                                    showScrubDialog(getString(R.string.settings_advanced_export_logs_copied_url))
+                                } else {
+                                    Toast
+                                        .makeText(context, getString(R.string.settings_advanced_export_logs_copied_url), Toast.LENGTH_LONG)
+                                        .show()
+                                }
                             }
                         }
                     }
                 } catch (e: Exception) {
                     Log.w(TAG, "Error uploading logs", e)
-                    requireActivity().runOnUiThread {
-                        Toast
-                            .makeText(context, getString(R.string.settings_advanced_export_logs_error_uploading, e.message), Toast.LENGTH_LONG)
-                            .show()
+                    activity?.let { act ->
+                        act.runOnUiThread {
+                            Toast
+                                .makeText(context, getString(R.string.settings_advanced_export_logs_error_uploading, e.message), Toast.LENGTH_LONG)
+                                .show()
+                        }
                     }
                 }
             }
@@ -832,10 +848,12 @@ class SettingsActivity : AppCompatActivity(), PreferenceFragmentCompat.OnPrefere
             lifecycleScope.launch(Dispatchers.IO) {
                 Log.deleteAll()
                 val context = context ?: return@launch
-                requireActivity().runOnUiThread {
-                    Toast
-                        .makeText(context, getString(R.string.settings_advanced_clear_logs_deleted_toast), Toast.LENGTH_LONG)
-                        .show()
+                activity?.let { act ->
+                    act.runOnUiThread {
+                        Toast
+                            .makeText(context, getString(R.string.settings_advanced_clear_logs_deleted_toast), Toast.LENGTH_LONG)
+                            .show()
+                    }
                 }
             }
         }
