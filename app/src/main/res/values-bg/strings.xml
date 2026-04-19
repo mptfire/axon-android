@@ -4,7 +4,7 @@
     <string name="common_priority_default_name">Подразбиран приоритет</string>
     <string name="common_priority_high_name">Висок приоритет</string>
     <string name="common_priority_max_name">Най-висок приоритет</string>
-    <string name="channel_subscriber_service_name">Абонаментна услуга</string>
+    <string name="channel_subscriber_service_name">Услуга във фонов режим</string>
     <string name="channel_subscriber_notification_instant_text">Има абонамент за теми с незабавно доставяне</string>
     <string name="channel_subscriber_notification_instant_text_three">Има абонамент за три теми с незабавно доставяне</string>
     <string name="channel_subscriber_notification_instant_text_four">Има абонамент за четири теми с незабавно доставяне</string>
@@ -472,8 +472,24 @@
     <string name="common_button_reset_to_default">Подразбирани настройки</string>
     <string name="default_server_dialog_url_error_invalid">Въведете адрес на услуга, напр. https://ntfy.example.com</string>
     <string name="connection_alert_title">Връзката е загубена</string>
-    <string name="connection_alert_text_one">От най-малко %2$d минути няма връзка с %1$s</string>
-    <string name="connection_alert_text_multiple">От най-малко %2$d минути няма връзка със сървърите на %1$d</string>
+    <string name="connection_alert_text_one">Най-малко от %2$d минути няма връзка с %1$s. Проверете свързаността.</string>
+    <string name="connection_alert_text_multiple">Най-малко от %2$d минути няма връзка със сървърите на %1$d. Проверете свързаността.</string>
     <string name="connection_alert_action_snooze">Отлагане с %1$dч</string>
     <string name="connection_alert_action_never">Да не се показва повече</string>
+    <string name="channel_connection_alert_name">Предупреждения за връзката</string>
+    <string name="connection_alert_snoozed_toast">Предупреждението за липсваща връзка е отложено за %1$d часа</string>
+    <string name="main_banner_no_network_text">Извън мрежа сте</string>
+    <string name="settings_advanced_connection_alert_title">Известие при загуба на връзка</string>
+    <string name="settings_advanced_connection_alert_summary_never">Без известия за липса на връзка със сървъра на ntfy</string>
+    <string name="settings_advanced_connection_alert_summary_five_minutes">Известяване ако няма връзка със сървъра на ntfy за повече от 5 минути</string>
+    <string name="settings_advanced_connection_alert_summary_fifteen_minutes">Известяване ако няма връзка със сървъра на ntfy за повече от 15 минути</string>
+    <string name="settings_advanced_connection_alert_summary_one_hour">Известяване ако няма връзка със сървъра на ntfy за повече от 1 час</string>
+    <string name="settings_advanced_connection_alert_summary_three_hours">Известяване ако няма връзка със сървъра на ntfy за повече от 3 часа</string>
+    <string name="settings_advanced_connection_alert_summary_twelve_hours">Известяване ако няма връзка със сървъра на ntfy за повече от 12 часа</string>
+    <string name="settings_advanced_connection_alert_never">Никога</string>
+    <string name="settings_advanced_connection_alert_five_minutes">След 5 минути</string>
+    <string name="settings_advanced_connection_alert_fifteen_minutes">След 15 минути</string>
+    <string name="settings_advanced_connection_alert_one_hour">След 1 час</string>
+    <string name="settings_advanced_connection_alert_three_hours">След 3 часа</string>
+    <string name="settings_advanced_connection_alert_twelve_hours">След 12 часа</string>
 </resources>
