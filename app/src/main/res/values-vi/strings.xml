@@ -338,4 +338,7 @@
     <string name="detail_settings_about_header">About</string>
     <string name="detail_item_tags">Tags: %1$s</string>
     <string name="settings_advanced_export_logs_scrub_dialog_button_ok">OK</string>
+    <string name="common_button_next">Tiếp</string>
+    <string name="common_button_add">Thêm</string>
+    <string name="common_button_delete">Xoá</string>
 </resources>
