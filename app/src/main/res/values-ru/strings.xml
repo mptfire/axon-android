@@ -4,7 +4,7 @@
     <string name="common_priority_default_name">Стандартный приоритет</string>
     <string name="common_priority_high_name">Высокий приоритет</string>
     <string name="common_priority_max_name">Максимальный приоритет</string>
-    <string name="channel_subscriber_service_name">Сервис подписки</string>
+    <string name="channel_subscriber_service_name">Фоновый сервис</string>
     <string name="common_priority_min_name">Минимальный приоритет</string>
     <string name="common_priority_low_name">Низкий приоритет</string>
     <string name="main_menu_notifications_disabled_forever">Уведомления без звука</string>
@@ -30,7 +30,7 @@
     <string name="detail_menu_enable_instant">Включить моментальную доставку</string>
     <string name="detail_menu_disable_instant">Выключить моментальную доставку</string>
     <string name="detail_menu_test">Отправить тестовое уведомление</string>
-    <string name="detail_menu_copy_url">Скопировать URL-адрес темы</string>
+    <string name="detail_menu_copy_url">Скопировать адрес темы</string>
     <string name="detail_menu_clear">Очистить все уведомления</string>
     <string name="detail_menu_settings">Настройки подписок</string>
     <string name="detail_menu_unsubscribe">Отписаться</string>
@@ -336,8 +336,8 @@
     <string name="detail_settings_notifications_dedicated_channels_summary_on">Используются пользовательские настройки для этой подписки</string>
     <string name="detail_settings_notifications_insistent_max_priority_list_item_disabled">Уведомлять только один раз</string>
     <string name="settings_notifications_insistent_max_priority_title">Продолжать уведомлять при наивысшем приоритете</string>
-    <string name="main_banner_websocket_reconnect_text">Чтобы WebSockets работал в фоновом режиме, проставьте ntfy права «Будильники и напоминания»</string>
-    <string name="main_banner_websocket_reconnect_button_remind_later">Спросить потом</string>
+    <string name="main_banner_websocket_reconnect_text">Чтобы обеспечить повторное подключение WebSockets в фоновом режиме, предоставьте ntfy разрешение \"Будильник и напоминания\"</string>
+    <string name="main_banner_websocket_reconnect_button_remind_later">Спросить позже</string>
     <string name="main_banner_websocket_reconnect_button_dismiss">Закрыть</string>
     <string name="main_banner_websocket_reconnect_button_enable_now">Предоставить сейчас</string>
     <string name="settings_advanced_exact_alarms_title">Точные оповещения</string>
@@ -489,4 +489,5 @@
     <string name="settings_advanced_connection_alert_twelve_hours">Через 12 часов</string>
     <string name="default_server_dialog_url_error_invalid">Укажите верный URL, например https://ntfy.example.com</string>
     <string name="detail_menu_search">Поиск уведомлений</string>
+    <string name="connection_alert_snoozed_toast">Предупреждение об отсутствии соединения отложено на %1$dч</string>
 </resources>
