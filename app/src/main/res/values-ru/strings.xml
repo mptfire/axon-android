@@ -338,7 +338,7 @@
     <string name="settings_notifications_insistent_max_priority_title">Продолжать уведомлять при наивысшем приоритете</string>
     <string name="main_banner_websocket_reconnect_text">Чтобы обеспечить повторное подключение WebSockets в фоновом режиме, предоставьте ntfy разрешение \"Будильник и напоминания\"</string>
     <string name="main_banner_websocket_reconnect_button_remind_later">Спросить позже</string>
-    <string name="main_banner_websocket_reconnect_button_dismiss">Закрыть</string>
+    <string name="main_banner_websocket_reconnect_button_dismiss">Отмена</string>
     <string name="main_banner_websocket_reconnect_button_enable_now">Предоставить сейчас</string>
     <string name="settings_advanced_exact_alarms_title">Точные оповещения</string>
     <string name="settings_advanced_exact_alarms_true">ntfy может выставлять точные оповещения. Точные оповещения необходимы для переподключения WebSockets в фоновом режиме. Нажмите, чтобы отозвать разрешение.</string>
