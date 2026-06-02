@@ -43,7 +43,7 @@ class Distributor(val context: Context) {
         broadcastIntent.`package` = app
         broadcastIntent.action = ACTION_REGISTRATION_FAILED
         broadcastIntent.putExtra(EXTRA_TOKEN, connectorToken)
-        broadcastIntent.putExtra(EXTRA_FAILED_REASON, reason)
+        broadcastIntent.putExtra(EXTRA_FAILED_REASON, reason.name)
         context.sendBroadcast(broadcastIntent)
     }
 
