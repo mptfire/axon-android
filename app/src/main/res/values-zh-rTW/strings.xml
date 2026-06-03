@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="channel_subscriber_notification_noinstant_text_six">已訂閱 6 個主題</string>
-    <string name="common_priority_default_name">預設優先順序</string>
+    <string name="common_priority_default_name">預設優先級</string>
     <string name="main_menu_report_bug_title">問題回報</string>
     <string name="channel_subscriber_notification_title">正在接收通知</string>
     <string name="channel_subscriber_notification_instant_text">已訂閱即時推送主題</string>
@@ -47,10 +47,10 @@
     <string name="add_dialog_description_below">主題可能不受密碼保護，因此請選擇不容易猜到的名稱。訂閱後，你可以使用 PUT/POST 傳送通知。</string>
     <string name="add_dialog_use_another_server">使用其他伺服器</string>
     <string name="add_dialog_use_another_server_description">在下方輸入服務 URL，以訂閱其他伺服器的主題。</string>
-    <string name="common_priority_min_name">最低優先順序</string>
-    <string name="common_priority_low_name">低優先順序</string>
-    <string name="common_priority_high_name">高優先順序</string>
-    <string name="common_priority_max_name">最高優先順序</string>
+    <string name="common_priority_min_name">最低優先級</string>
+    <string name="common_priority_low_name">低優先級</string>
+    <string name="common_priority_high_name">高優先級</string>
+    <string name="common_priority_max_name">最高優先級</string>
     <string name="channel_subscriber_service_name">背景服務</string>
     <string name="channel_subscriber_notification_instant_text_three">已訂閱 3 個即時推送主題</string>
     <string name="main_menu_docs_title">閱讀說明文件</string>
@@ -297,7 +297,7 @@
     <string name="settings_advanced_clear_logs_deleted_toast">記錄檔已刪除</string>
     <string name="detail_settings_appearance_display_name_default_summary">%1$s（預設）</string>
     <string name="user_dialog_title_edit">編輯使用者</string>
-    <string name="common_service_url">服務 URL</string>
+    <string name="common_service_url">服務網址</string>
     <string name="user_dialog_password_hint_edit">密碼（留空不變）</string>
     <string name="settings_general_dark_mode_entry_dark">深色模式</string>
     <string name="settings_backup_restore_backup_title">備份到檔案</string>
@@ -405,9 +405,9 @@
     <string name="common_button_delete">刪除</string>
     <string name="publish_dialog_docs_text">如需範例與所有發布功能的詳細說明，請參考 <a href="https://docs.ntfy.sh/publish/">說明文件</a>。</string>
     <string name="common_button_next">下一步</string>
-    <string name="common_service_url_placeholder">例如：https://ntfy.example.com</string>
+    <string name="common_service_url_placeholder">例如 https://ntfy.example.com</string>
     <string name="common_certificate_subject">主體</string>
-    <string name="common_certificate_issuer">簽發者</string>
+    <string name="common_certificate_issuer">發行者</string>
     <string name="common_certificate_fingerprint">SHA-256 指紋</string>
     <string name="common_certificate_valid_from">有效起始日</string>
     <string name="common_certificate_valid_until">有效期限至</string>
