@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="channel_subscriber_service_name">Prenumerationstjänst</string>
+    <string name="channel_subscriber_service_name">Bakgrundstjänst</string>
     <string name="channel_subscriber_notification_title">Lyssna på inkommande meddelanden</string>
     <string name="channel_subscriber_notification_instant_text">Prenumererar på ämnen med omedelbar leverans</string>
     <string name="channel_subscriber_notification_instant_text_one">Prenumererar på ett ämne för omedelbar leverans</string>
@@ -345,4 +345,16 @@
     <string name="settings_advanced_exact_alarms_title">Exakta larm</string>
     <string name="settings_advanced_exact_alarms_true">ntfy kan schemalägga exakta larm. Exakta larm krävs för att återansluta WebSockets i bakgrunden. Klicka för att återkalla behörigheten.</string>
     <string name="settings_advanced_exact_alarms_false">ntfy kan inte schemalägga exakta larm. Exakta larm krävs för att återansluta WebSockets i bakgrunden. Klicka för att bevilja behörigheten.</string>
+    <string name="common_button_next">Nästa</string>
+    <string name="common_button_add">Lägg till</string>
+    <string name="common_button_delete">Radera</string>
+    <string name="common_button_reset_to_default">Återställ till standard</string>
+    <string name="common_service_url_placeholder">t.ex. https://ntfy.example.com</string>
+    <string name="common_certificate_subject">Ämne</string>
+    <string name="common_certificate_issuer">Utgivare</string>
+    <string name="common_certificate_fingerprint">SHA-256 fingeravtryck</string>
+    <string name="common_certificate_valid_from">Giltig från</string>
+    <string name="common_certificate_valid_until">Giltig till</string>
+    <string name="common_certificate_added_toast">Certifikat tillagd</string>
+    <string name="common_certificate_deleted_toast">Certifikat borttaget</string>
 </resources>
