@@ -149,7 +149,6 @@
     <string name="settings_title">Tetapan</string>
     <string name="settings_notifications_header">Pemberitahuan</string>
     <string name="settings_notifications_priority_low">rendah</string>
-    <string name="settings_advanced_connection_protocol_entry_ws"></string>
     <string name="settings_about_header">Tentang</string>
     <string name="settings_about_version_title">Versi</string>
     <string name="user_dialog_username_hint">Nama pengguna</string>
