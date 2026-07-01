@@ -350,4 +350,5 @@
     <string name="common_certificate_added_toast">Dodano certyfikat</string>
     <string name="common_certificate_deleted_toast">Usunięto certyfikat</string>
     <string name="main_menu_connection_error">Błąd połączenia</string>
+    <string name="common_button_reset_to_default">Przywróć ustawienia domyślne</string>
 </resources>
