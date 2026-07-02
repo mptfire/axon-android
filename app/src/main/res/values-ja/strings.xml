@@ -492,4 +492,6 @@
     <string name="settings_advanced_connection_alert_one_hour">1時間後</string>
     <string name="settings_advanced_connection_alert_three_hours">3時間後</string>
     <string name="settings_advanced_connection_alert_twelve_hours">12時間後</string>
+    <string name="channel_subscriber_notification_no_network_title">ネットワーク待機中</string>
+    <string name="channel_subscriber_notification_no_network_text">Wi-Fiあるいはモバイル通信が利用可能になれば通知が再開されます</string>
 </resources>
