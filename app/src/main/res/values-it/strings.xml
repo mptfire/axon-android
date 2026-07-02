@@ -195,7 +195,7 @@
     <string name="add_dialog_button_back">Indietro</string>
     <string name="detail_no_notifications_text">Non hai ancora ricevuto notifiche su questo argomento.</string>
     <string name="detail_item_menu_open">Apri file</string>
-    <string name="detail_how_to_example"><![CDATA[ Esempio (utilizzando curl):<br/><tt>$ curl -d \"Hi\" %1$s</tt> ]]></string>
+    <string name="detail_how_to_example"><![CDATA[" Esempio (tramite curl):<br><tt>$ curl -d \"Hi\" %1$s</tt> "]]></string>
     <string name="detail_instant_delivery_disabled">Consegna istantanea disattivata</string>
     <string name="detail_item_menu_delete">Elimina file</string>
     <string name="detail_item_menu_save_file">Salva il file</string>
@@ -488,4 +488,6 @@
     <string name="custom_headers_dialog_title_edit">Modifica intestazione personalizzata</string>
     <string name="custom_headers_dialog_name_hint">Nome dell\'intestazione (ad esempio CF-Access-Client-Id)</string>
     <string name="custom_headers_dialog_value_hint">Valore dell\'intestazione (ad esempio 9f3c2e4a1b2d4e)</string>
+    <string name="channel_subscriber_notification_no_network_title">In attesa della rete</string>
+    <string name="channel_subscriber_notification_no_network_text">Le notifiche riprenderanno quando sarà disponibile una connessione Wi-Fi o mobile</string>
 </resources>
