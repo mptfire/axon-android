@@ -210,6 +210,24 @@ class SubscriberService : Service() {
      * It is guaranteed that only one of function is run at a time (see mutex above).
      */
     private suspend fun reallyRefreshConnections() {
+        // If the device has no network (airplane mode, offline, etc.), do NOT open connections.
+        // Instead close any open connections and update the foreground notification, keeping the
+        // foreground service ALIVE (see #1709). Stopping it here would force a fresh background
+        // foreground-service start when network returns, which Android 12+ forbids for apps without a
+        // battery-optimization exemption. On network return, Application's callback calls refresh()
+        // again and we reconnect via the normal path below.
+        if (!isNetworkAvailable(this)) {
+            Log.d(TAG, "No network available, closing all connections and waiting for network")
+            connections.values.forEach { connection -> connection.close() }
+            connections.clear()
+            notificationManager?.cancel(NOTIFICATION_CONNECTION_ALERT_ID) // clear any stale "connection lost" alert
+            val title = getString(R.string.channel_subscriber_notification_no_network_title)
+            val text = getString(R.string.channel_subscriber_notification_no_network_text)
+            serviceNotification = createNotification(title, text)
+            notificationManager?.notify(NOTIFICATION_SERVICE_ID, serviceNotification)
+            return
+        }
+
         // Group instant subscriptions by base URL, there is only one connection per base URL
         val instantSubscriptions = repository.getSubscriptions().filter { s -> s.instant }
         val activeConnectionIds = connections.keys().toList().toSet()

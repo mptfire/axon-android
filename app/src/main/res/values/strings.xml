@@ -31,6 +31,8 @@
     <string name="channel_subscriber_service_name">Background service</string>
     <string name="channel_connection_alert_name">Connection alerts</string>
     <string name="channel_subscriber_notification_title">Listening for incoming notifications</string>
+    <string name="channel_subscriber_notification_no_network_title">Waiting for network</string>
+    <string name="channel_subscriber_notification_no_network_text">Notifications will resume when Wi-Fi or mobile data is available</string>
     <string name="channel_subscriber_notification_instant_text">Subscribed to instant delivery topics</string>
     <string name="channel_subscriber_notification_instant_text_one">Subscribed to one instant delivery topic</string>
     <string name="channel_subscriber_notification_instant_text_two">Subscribed to two instant delivery topics</string>

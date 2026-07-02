@@ -1,0 +1,2 @@
+Bug fixes + maintenance:
+* Fix instant delivery not resuming after the network returns on Android 12+ (#1709, thanks to @isaitgirl for reporting)
