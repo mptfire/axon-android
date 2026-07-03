@@ -99,7 +99,7 @@ data class ConnectionDetails(
     val state: ConnectionState = ConnectionState.NOT_APPLICABLE,
     val error: Throwable? = null,
     val nextRetryTime: Long = 0L,
-    val firstErrorTime: Long = 0L
+    val disconnectedSince: Long = 0L // ms timestamp we last left CONNECTED (0 = connected); drives the connection-lost alert
 ) {
     fun getStackTraceString(): String {
         return error?.stackTraceToString() ?: ""

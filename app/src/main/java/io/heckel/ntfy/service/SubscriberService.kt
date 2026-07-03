@@ -350,20 +350,30 @@ class SubscriberService : Service() {
         val thresholdMillis = thresholdSeconds * 1000L
         val allDetails = repository.getConnectionDetails()
         val disconnectedUrls = allDetails.filter { (_, details) ->
-            details.hasError() && details.firstErrorTime > 0L &&
-                (now - details.firstErrorTime) >= thresholdMillis
+            details.disconnectedSince > 0L &&
+                (now - details.disconnectedSince) >= thresholdMillis
         }.keys
 
         if (disconnectedUrls.isNotEmpty()) {
-            val thresholdMinutes = (thresholdSeconds / 60).toInt()
-            showConnectionAlertNotification(disconnectedUrls, thresholdMinutes)
+            // Only post the alert if it isn't already showing. maybeShowConnectionAlert() runs on
+            // every connection retry (~every 2-3 min while a server is down), and re-posting the
+            // same notification re-triggers it: some OEMs (e.g. ColorOS) wake the screen / re-alert
+            // on each notify() despite FLAG_ONLY_ALERT_ONCE. We refresh it only after it's been
+            // cleared (recovery, snooze, or dismiss), so an ongoing outage alerts exactly once.
+            val alreadyShowing = notificationManager?.activeNotifications?.any {
+                it.id == NOTIFICATION_CONNECTION_ALERT_ID
+            } == true
+            if (!alreadyShowing) {
+                val thresholdMinutes = (thresholdSeconds / 60).toInt()
+                showConnectionAlertNotification(disconnectedUrls, thresholdMinutes)
+            }
         }
     }
 
     private fun maybeAutoDismissConnectionAlert() {
         val allDetails = repository.getConnectionDetails()
         val anyStillDisconnected = allDetails.any { (_, details) ->
-            details.hasError() && details.firstErrorTime > 0L
+            details.disconnectedSince > 0L
         }
         if (!anyStillDisconnected) {
             notificationManager?.cancel(NOTIFICATION_CONNECTION_ALERT_ID)

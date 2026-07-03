@@ -597,13 +597,17 @@ class Repository(private val sharedPrefs: SharedPreferences, database: Database)
 
     fun updateConnectionDetails(baseUrl: String, state: ConnectionState, error: Throwable? = null, nextRetryTime: Long = 0L) {
         val current = connectionDetails[baseUrl]
-        val firstErrorTime = when {
-            error == null -> 0L
+        // How long we've been away from a healthy CONNECTED state, for the connection-lost alert.
+        // Must NOT key off `error`: routine drops (EOF / stream reset) are reported with error=null to
+        // suppress the UI warning icon, but they are still disconnections and must keep the clock running.
+        // Cleared only once we're actually CONNECTED (or the subscription goes away).
+        val disconnectedSince = when {
             state == ConnectionState.CONNECTED -> 0L
-            current?.firstErrorTime != null && current.firstErrorTime > 0L -> current.firstErrorTime
-            else -> System.currentTimeMillis()
+            state == ConnectionState.NOT_APPLICABLE -> 0L
+            current != null && current.disconnectedSince > 0L -> current.disconnectedSince // preserve episode start
+            else -> System.currentTimeMillis() // first tick of a new disconnection episode
         }
-        val details = ConnectionDetails(state, error, nextRetryTime, firstErrorTime)
+        val details = ConnectionDetails(state, error, nextRetryTime, disconnectedSince)
         if (current != details) {
             if (state == ConnectionState.NOT_APPLICABLE && error == null) {
                 connectionDetails.remove(baseUrl)
