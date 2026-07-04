@@ -492,4 +492,6 @@
     <string name="settings_advanced_connection_alert_one_hour">Setelah 1 jam</string>
     <string name="settings_advanced_connection_alert_three_hours">Setelah 3 jam</string>
     <string name="settings_advanced_connection_alert_twelve_hours">Setelah 12 jam</string>
+    <string name="channel_subscriber_notification_no_network_title">Menunggu jaringan</string>
+    <string name="channel_subscriber_notification_no_network_text">Pemberitahuan akan dilanjutkan kembali saat Wi-Fi atau data seluler tersedia</string>
 </resources>
