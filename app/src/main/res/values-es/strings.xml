@@ -492,4 +492,5 @@
     <string name="settings_advanced_connection_alert_three_hours">Después de 3 horas</string>
     <string name="settings_advanced_connection_alert_twelve_hours">Después de 12 horas</string>
     <string name="connection_alert_snoozed_toast">Alerta de conexión perdida adiado por %1$dh</string>
+    <string name="channel_subscriber_notification_no_network_text">Las notificaciones se resumirán cuando el Wi-Fi o los datos móbiles estén disponibles</string>
 </resources>
