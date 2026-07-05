@@ -492,4 +492,5 @@
     <string name="settings_advanced_connection_alert_one_hour">След 1 час</string>
     <string name="settings_advanced_connection_alert_three_hours">След 3 часа</string>
     <string name="settings_advanced_connection_alert_twelve_hours">След 12 часа</string>
+    <string name="channel_subscriber_notification_no_network_title">Очакване на мрежа</string>
 </resources>
