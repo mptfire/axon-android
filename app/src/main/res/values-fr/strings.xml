@@ -492,4 +492,6 @@
     <string name="settings_advanced_connection_alert_one_hour">Après 1 heure</string>
     <string name="settings_advanced_connection_alert_three_hours">Après 3 heures</string>
     <string name="settings_advanced_connection_alert_twelve_hours">Après 12 heures</string>
+    <string name="channel_subscriber_notification_no_network_title">En attente du réseau</string>
+    <string name="channel_subscriber_notification_no_network_text">Les notifications reprendront quand le Wi-Fi ou le réseau de données mobiles sera disponible</string>
 </resources>
