@@ -220,7 +220,6 @@ class SubscriberService : Service() {
             Log.d(TAG, "No network available, closing all connections and waiting for network")
             connections.values.forEach { connection -> connection.close() }
             connections.clear()
-            notificationManager?.cancel(NOTIFICATION_CONNECTION_ALERT_ID) // clear any stale "connection lost" alert
             val title = getString(R.string.channel_subscriber_notification_no_network_title)
             val text = getString(R.string.channel_subscriber_notification_no_network_text)
             serviceNotification = createNotification(title, text)

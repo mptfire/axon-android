@@ -1,4 +1,0 @@
-Bug fixes + maintenance:
-* Fix instant delivery not resuming after the network returns on Android 12+ (#1709, thanks to @isaitgirl for reporting)
-* Fix the "connection lost" alert repeatedly waking the screen while a server stayed unreachable
-* Fix the "connection lost" alert firing late or not at all when a connection kept dropping rather than being refused outright
