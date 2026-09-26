@@ -1,0 +1,49 @@
+name: apk
+
+# axon fork: build the branded fdroid debug APK on tag pushes and attach it to the release.
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up JDK
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@d25c3db0b0db4d57034fb1b0e9afef9e4a9f5d4d # v3
+
+      - name: Build fdroid debug APK
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleFdroidDebug
+
+      - name: Rename APK
+        run: |
+          mkdir -p dist
+          cp app/build/outputs/apk/fdroid/debug/app-fdroid-debug.apk dist/axon-fdroid-debug.apk
+
+      - name: Attach to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" dist/axon-fdroid-debug.apk --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist/axon-fdroid-debug.apk \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "axon $GITHUB_REF_NAME" \
+              --generate-notes
+          fi
