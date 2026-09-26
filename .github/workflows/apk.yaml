@@ -23,7 +23,7 @@ jobs:
           java-version: '21'
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@d25c3db0b0db4d57034fb1b0e9afef9e4a9f5d4d # v3
+        uses: android-actions/setup-android@v3
 
       - name: Build fdroid debug APK
         run: |
