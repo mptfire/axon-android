@@ -32,11 +32,34 @@ android {
         }
     }
 
+    signingConfigs {
+        // axon: local release keystore (untracked). Create with:
+        //   keytool -genkeypair -keystore axon-release.jks -alias axon ...
+        // Passwords live in ~/.gradle/axon-signing.properties (untracked):
+        //   AXON_STORE_PASSWORD=... / AXON_KEY_PASSWORD=...
+        def keystoreFile = file("../axon-release.jks")
+        def signingProps = new Properties()
+        def propsFile = rootProject.file("axon-signing.properties")
+        if (propsFile.exists()) {
+            propsFile.withInputStream { signingProps.load(it) }
+        }
+        if (keystoreFile.exists()) {
+            release {
+                storeFile keystoreFile
+                storePassword signingProps.getProperty("AXON_STORE_PASSWORD", "")
+                keyAlias "axon"
+                keyPassword signingProps.getProperty("AXON_KEY_PASSWORD", "")
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             shrinkResources false
             debuggable false
+            if (file("../axon-release.jks").exists()) {
+                signingConfig signingConfigs.release // axon: sideload-ready signed builds
+            }
             // DEV/TEST ONLY: Uncomment this to test the release build with a debug key.
             //                This is required to test against the production Firebase config.
             // signingConfig signingConfigs.debug
