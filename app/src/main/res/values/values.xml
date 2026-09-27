@@ -5,7 +5,6 @@
 
     <!-- Main app constants -->
     <string name="app_name" translatable="false">axon</string>
-    <string name="app_base_url" translatable="false">https://axon.example.com</string> <!-- If changed, you must also change google-services.json! -->
 
     <!-- Main activity -->
     <string name="main_menu_report_bug_url" translatable="false">https://github.com/binwiederhier/ntfy/issues</string>

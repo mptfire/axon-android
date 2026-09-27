@@ -13,12 +13,21 @@ android {
     compileSdkVersion 36
 
     defaultConfig {
-        applicationId "io.heckel.ntfy"
+        // axon: separate applicationId so axon installs alongside (not over) upstream ntfy.
+        // Base URL is injected at build time from an untracked axon-build.properties:
+        //   AXON_BASE_URL=https://axon.example.com
+        def axonProps = new Properties()
+        def axonPropsFile = rootProject.file("axon-build.properties")
+        if (axonPropsFile.exists()) {
+            axonPropsFile.withInputStream { axonProps.load(it) }
+        }
+        applicationId "app.axon"
+        resValue "string", "app_base_url", axonProps.getProperty("AXON_BASE_URL", "https://ntfy.sh")
         minSdkVersion 26
         targetSdkVersion 36
 
-        versionCode 63
-        versionName "1.25.2"
+        versionCode 100
+        versionName "1.0-axon"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -29,6 +38,7 @@ android {
 
         buildFeatures {
             buildConfig true
+            resValues true
         }
     }
 

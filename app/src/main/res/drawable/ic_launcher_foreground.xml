@@ -3,6 +3,7 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+    <!-- axon fiber glyph, centered in the 66dp adaptive-icon safe zone -->
     <group>
         <path
             android:pathData="M34,74 C56,74 58,44 84,30"
