@@ -22,9 +22,11 @@
     </queries>
 
     <!-- Application -->
+    <!-- axon: allowBackup=false — the message DB and subscriptions (topic names, auth)
+         must not land in cloud backups or device transfers -->
     <application
             android:name=".app.Application"
-            android:allowBackup="true"
+            android:allowBackup="false"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher"
