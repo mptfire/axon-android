@@ -1,6 +1,10 @@
 name: apk
 
-# axon fork: build the branded fdroid debug APK on tag pushes and attach it to the release.
+# axon fork: build the branded release APK on tag pushes and attach it to the release.
+# Signed with the dedicated CI keystore (secrets AXON_KEYSTORE_B64 / AXON_STORE_PASSWORD /
+# AXON_KEY_PASSWORD) — not the operator's personal key. The default server stays
+# https://ntfy.sh: axon-build.properties (personal server baking) is intentionally NOT
+# injected on CI.
 on:
   push:
     tags:
@@ -25,24 +29,32 @@ jobs:
       - name: Accept Android SDK licenses (runner ships a preinstalled SDK)
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
 
-      - name: Build fdroid debug APK
+      - name: Restore CI signing key
+        run: |
+          echo "${{ secrets.AXON_KEYSTORE_B64 }}" | base64 -d > axon-release.jks
+          cat > axon-signing.properties <<EOF
+          AXON_STORE_PASSWORD=${{ secrets.AXON_STORE_PASSWORD }}
+          AXON_KEY_PASSWORD=${{ secrets.AXON_KEY_PASSWORD }}
+          EOF
+
+      - name: Build fdroid release APK
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon assembleFdroidDebug
+          ./gradlew --no-daemon assembleFdroidRelease
 
       - name: Rename APK
         run: |
           mkdir -p dist
-          cp app/build/outputs/apk/fdroid/debug/app-fdroid-debug.apk dist/axon-fdroid-debug.apk
+          cp app/build/outputs/apk/fdroid/release/app-fdroid-release.apk dist/axon-fdroid-release.apk
 
       - name: Attach to release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" dist/axon-fdroid-debug.apk --repo "$GITHUB_REPOSITORY" --clobber
+            gh release upload "$GITHUB_REF_NAME" dist/axon-fdroid-release.apk --repo "$GITHUB_REPOSITORY" --clobber
           else
-            gh release create "$GITHUB_REF_NAME" dist/axon-fdroid-debug.apk \
+            gh release create "$GITHUB_REF_NAME" dist/axon-fdroid-release.apk \
               --repo "$GITHUB_REPOSITORY" \
               --title "axon $GITHUB_REF_NAME" \
               --generate-notes
