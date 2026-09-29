@@ -568,4 +568,17 @@
     <string name="client_certificate_dialog_error_wrong_password">Wrong password or invalid PKCS#12 file</string>
     <string name="client_certificate_dialog_error_invalid_p12_password">Invalid password or corrupted PKCS#12 file</string>
     <string name="client_certificate_dialog_error_invalid_url">Invalid service URL</string>
+    <!-- axon: device pairing (agent channel) -->
+    <string name="pairing_title">Pair with axon</string>
+    <string name="pairing_intro">Paste the one-time pairing code from your agent or the web UI. The code expires after 5 minutes and works once. Pairing gives this app its own device token — no passwords needed.</string>
+    <string name="pairing_base_url_hint">Server URL</string>
+    <string name="pairing_code_hint">Pairing code</string>
+    <string name="pairing_label_hint">Device label (optional, e.g. Pixel 9)</string>
+    <string name="pairing_button">Pair</string>
+    <string name="pairing_done">Done</string>
+    <string name="pairing_in_progress">Pairing…</string>
+    <string name="pairing_success">Paired as %1$s. %2$d subscriptions applied from the device config.</string>
+    <string name="pairing_error_fields">Server URL and pairing code are required.</string>
+    <string name="pairing_error_invalid">That code is invalid, expired, or already used. Ask your agent for a fresh one.</string>
+    <string name="pairing_error_server">Pairing failed: %1$s</string>
 </resources>

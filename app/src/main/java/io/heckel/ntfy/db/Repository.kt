@@ -197,6 +197,36 @@ class Repository(private val sharedPrefs: SharedPreferences, database: Database)
         notificationDao.removeIfOlderThan(subscriptionId, olderThanTimestamp)
     }
 
+    // axon: agent channel — remembers which server/device this app is paired
+    // with, so MainActivity can apply the device config on start.
+    fun setPairedDevice(baseUrl: String, deviceId: String, username: String, token: String) {
+        sharedPrefs.edit()
+            .putString(PREF_PAIRED_DEVICE_BASE_URL, baseUrl)
+            .putString(PREF_PAIRED_DEVICE_ID, deviceId)
+            .putString(PREF_PAIRED_DEVICE_USERNAME, username)
+            .putString(PREF_PAIRED_DEVICE_TOKEN, token)
+            .apply()
+    }
+
+    fun getPairedDevice(): PairedDevice? {
+        val baseUrl = sharedPrefs.getString(PREF_PAIRED_DEVICE_BASE_URL, null) ?: return null
+        val deviceId = sharedPrefs.getString(PREF_PAIRED_DEVICE_ID, null) ?: return null
+        val username = sharedPrefs.getString(PREF_PAIRED_DEVICE_USERNAME, "") ?: ""
+        val token = sharedPrefs.getString(PREF_PAIRED_DEVICE_TOKEN, "") ?: ""
+        return PairedDevice(baseUrl, deviceId, username, token)
+    }
+
+    fun clearPairedDevice() {
+        sharedPrefs.edit()
+            .remove(PREF_PAIRED_DEVICE_BASE_URL)
+            .remove(PREF_PAIRED_DEVICE_ID)
+            .remove(PREF_PAIRED_DEVICE_USERNAME)
+            .remove(PREF_PAIRED_DEVICE_TOKEN)
+            .apply()
+    }
+
+    data class PairedDevice(val baseUrl: String, val deviceId: String, val username: String, val token: String)
+
     suspend fun getUsers(): List<User> {
         return userDao.list()
     }
@@ -668,6 +698,12 @@ class Repository(private val sharedPrefs: SharedPreferences, database: Database)
         const val SHARED_PREFS_LAST_TOPICS = "LastTopics"
 
         private const val LAST_TOPICS_COUNT = 3
+
+        // axon: agent channel (device pairing)
+        private const val PREF_PAIRED_DEVICE_BASE_URL = "axon_paired_device_base_url"
+        private const val PREF_PAIRED_DEVICE_ID = "axon_paired_device_id"
+        private const val PREF_PAIRED_DEVICE_USERNAME = "axon_paired_device_username"
+        private const val PREF_PAIRED_DEVICE_TOKEN = "axon_paired_device_token"
 
         const val MIN_PRIORITY_USE_GLOBAL = 0
         const val MIN_PRIORITY_ANY = 1

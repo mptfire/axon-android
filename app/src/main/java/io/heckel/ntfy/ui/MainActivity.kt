@@ -148,6 +148,7 @@ class MainActivity : AppCompatActivity(), AddFragment.SubscribeListener, Notific
         workManager = WorkManager.getInstance(this)
         dispatcher = NotificationDispatcher(this, repository)
         appBaseUrl = getString(R.string.app_base_url)
+        handleAxonDeepLink(intent) // axon: axon://pair/<code>
 
         // Action bar
         val toolbarLayout = findViewById<AppBarLayout>(R.id.app_bar_drawer)
@@ -403,6 +404,39 @@ class MainActivity : AppCompatActivity(), AddFragment.SubscribeListener, Notific
         showHideConnectionErrorMenuItem(repository.getConnectionDetails())
         showHideNoNetworkBanner()
         redrawList()
+        maybeApplyDeviceConfig() // axon: agent channel
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        handleAxonDeepLink(intent) // axon: pairing link tapped while the app is open
+    }
+
+    // axon: agent channel — pairing deep link (axon://pair/<code>) routes to
+    // the pairing screen; the human tap there is the consent step.
+    private fun handleAxonDeepLink(intent: android.content.Intent) {
+        val data = intent.data ?: return
+        if (data.scheme == "axon" && data.host == "pair") {
+            startActivity(android.content.Intent(this, PairingActivity::class.java).setData(data))
+        }
+    }
+
+    // axon: agent channel — on app start, apply the paired device's config so
+    // agent-made changes (subscribe/mute) land in the app without UI work
+    private fun maybeApplyDeviceConfig() {
+        val paired = repository.getPairedDevice() ?: return
+        val api = io.heckel.ntfy.msg.ApiService(this)
+        lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try {
+                val added = PairingActivity.applyDeviceConfig(repository, api, paired.baseUrl, paired.username, paired.token, paired.deviceId)
+                if (added > 0) {
+                    io.heckel.ntfy.service.SubscriberServiceManager(this@MainActivity).refresh()
+                    launch(kotlinx.coroutines.Dispatchers.Main) { redrawList() }
+                }
+            } catch (e: Exception) {
+                io.heckel.ntfy.util.Log.w(TAG, "Device config sync failed", e)
+            }
+        }
     }
 
     private fun showHideBatteryBanner(subscriptions: List<Subscription>) {

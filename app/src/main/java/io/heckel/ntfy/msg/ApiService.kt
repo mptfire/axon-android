@@ -2,6 +2,7 @@ package io.heckel.ntfy.msg
 
 import android.content.Context
 import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import io.heckel.ntfy.db.Notification
 import io.heckel.ntfy.db.Repository
 import io.heckel.ntfy.db.Subscription
@@ -185,6 +186,63 @@ class ApiService(private val context: Context) {
             throw Exception("Unexpected server response ${response.code}")
         }
     }
+
+    // axon: agent channel — pairing flow (see docs/agents.md). Exchanges a
+    // one-time pairing code for a device-scoped token. No credentials needed:
+    // the code is the credential, the human tap is the consent.
+    suspend fun pairDevice(baseUrl: String, code: String, label: String): PairResponse {
+        val url = baseUrl.trimEnd('/') + "/v1/device/claim"
+        val body = gson.toJson(mapOf("code" to code, "label" to label))
+        val request = HttpUtil.requestBuilder(url).post(body.toRequestBody()).build()
+        HttpUtil.defaultClient(context, baseUrl).newCall(request).execute().use { response ->
+            val text = response.body.string()
+            if (response.code == 400) {
+                throw PairingInvalidException()
+            } else if (!response.isSuccessful) {
+                throw IOException("Unexpected response ${response.code} when pairing")
+            }
+            return gson.fromJson(text, PairResponse::class.java)
+        }
+    }
+
+    // axon: fetch the account (username for the paired user; tokens are
+    // stripped server-side for device tokens)
+    suspend fun account(user: User): AccountResponse {
+        val url = user.baseUrl.trimEnd('/') + "/v1/account"
+        val customHeaders = repository.getCustomHeaders(user.baseUrl)
+        val request = HttpUtil.requestBuilder(url, user, customHeaders).build()
+        HttpUtil.defaultClient(context, user.baseUrl).newCall(request).execute().use { response ->
+            if (!response.isSuccessful) {
+                throw IOException("Unexpected response ${response.code} when fetching account")
+            }
+            return gson.fromJson(response.body.string(), AccountResponse::class.java)
+        }
+    }
+
+    // axon: read this device's agent-channel config (applied on sync)
+    suspend fun deviceConfig(user: User, deviceId: String): DeviceConfig? {
+        val url = user.baseUrl.trimEnd('/') + "/v1/device/" + deviceId + "/config"
+        val customHeaders = repository.getCustomHeaders(user.baseUrl)
+        val request = HttpUtil.requestBuilder(url, user, customHeaders).build()
+        HttpUtil.defaultClient(context, user.baseUrl).newCall(request).execute().use { response ->
+            if (response.code == 401 || response.code == 403) {
+                return null // device was unpaired server-side; stop syncing
+            } else if (!response.isSuccessful) {
+                throw IOException("Unexpected response ${response.code} when reading device config")
+            }
+            return gson.fromJson(response.body.string(), DeviceConfig::class.java)
+        }
+    }
+
+    data class PairResponse(val device_id: String, val token: String, val base_url: String)
+
+    data class AccountResponse(val username: String)
+
+    data class DeviceConfig(val subscriptions: List<DeviceConfigSubscription>?)
+
+    data class DeviceConfigSubscription(val topic: String, val muted: Boolean?, val min_priority: Int?)
+
+    class PairingInvalidException : Exception("pairing code invalid, expired, or already used")
 
     class UnauthorizedException(val user: User?) : Exception()
     class EntityTooLargeException : Exception()

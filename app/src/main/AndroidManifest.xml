@@ -63,6 +63,23 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="ntfy" />
             </intent-filter>
+            <!-- axon: pairing deep links, axon://pair/<code> -->
+            <intent-filter android:label="@string/pairing_title">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="axon" android:host="pair" />
+            </intent-filter>
+        </activity>
+
+        <!-- axon: device pairing (agent channel) -->
+        <activity
+                android:name=".ui.PairingActivity"
+                android:label="@string/pairing_title"
+                android:parentActivityName=".ui.MainActivity">
+            <meta-data
+                    android:name="android.support.PARENT_ACTIVITY"
+                    android:value=".ui.MainActivity"/>
         </activity>
 
         <!-- Settings activity -->
