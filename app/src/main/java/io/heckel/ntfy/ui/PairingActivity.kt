@@ -1,5 +1,6 @@
 package io.heckel.ntfy.ui
 
+import android.content.Context
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -69,7 +70,26 @@ class PairingActivity : AppCompatActivity() {
             data.getQueryParameter("label")?.trim()?.takeIf { it.isNotEmpty() }?.let { labelView.setText(it) }
         }
         if (autoPair && codeView.text.isNotBlank()) {
-            pairButton.performClick()
+            // axon: complete the claim in the background — the activity may be
+            // gone within seconds (user switches apps, screen off, incoming
+            // call). WorkManager owns the claim now and retries until the code
+            // expires; this activity just gets out of the way.
+            val prefs = getSharedPreferences("axon_pairing", Context.MODE_PRIVATE)
+            prefs.edit()
+                .putString(io.heckel.ntfy.work.DevicePairingWorker.KEY_SERVER, baseUrlView.text.toString().trim())
+                .putString(io.heckel.ntfy.work.DevicePairingWorker.KEY_CODE, codeView.text.toString().trim())
+                .putString(io.heckel.ntfy.work.DevicePairingWorker.KEY_LABEL, labelView.text.toString().trim())
+                .putLong(io.heckel.ntfy.work.DevicePairingWorker.KEY_TS, System.currentTimeMillis())
+                .apply()
+            androidx.work.WorkManager.getInstance(this).enqueueUniqueWork(
+                "axon-pairing",
+                androidx.work.ExistingWorkPolicy.REPLACE,
+                androidx.work.OneTimeWorkRequestBuilder<io.heckel.ntfy.work.DevicePairingWorker>()
+                    .setBackoffCriteria(androidx.work.BackoffPolicy.LINEAR, 10, java.util.concurrent.TimeUnit.SECONDS)
+                    .build()
+            )
+            finish()
+            return
         }
 
         pairButton.setOnClickListener {
