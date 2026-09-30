@@ -240,7 +240,14 @@ class ApiService(private val context: Context) {
 
     data class DeviceConfig(val subscriptions: List<DeviceConfigSubscription>?, val manage: String?)
 
-    data class DeviceConfigSubscription(val topic: String, val muted: Boolean?, val min_priority: Int?)
+    data class DeviceConfigSubscription(
+        val topic: String,
+        val muted: Boolean?,
+        val min_priority: Int?,
+        val auto_delete_seconds: Long?,
+        val insistent: Boolean?,
+        val display_name: String?
+    )
 
     class PairingInvalidException : Exception("pairing code invalid, expired, or already used")
 

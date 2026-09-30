@@ -167,10 +167,35 @@ class PairingActivity : AppCompatActivity() {
                         )
                     )
                     added++
-                } else if (sub.muted != null) {
-                    val mutedUntil = if (sub.muted == true) Long.MAX_VALUE else 0L
-                    if (existing.mutedUntil != mutedUntil) {
-                        repository.updateSubscription(existing.copy(mutedUntil = mutedUntil))
+                } else {
+                    // Sync every agent-managed per-topic setting; anything the
+                    // config omits keeps its current (possibly human-set) value
+                    val mutedUntil = when (sub.muted) {
+                        true -> Long.MAX_VALUE
+                        false -> 0L
+                        null -> existing.mutedUntil
+                    }
+                    val minPriority = sub.min_priority ?: existing.minPriority
+                    val autoDelete = sub.auto_delete_seconds ?: existing.autoDelete
+                    val insistent = when (sub.insistent) {
+                        true -> 1
+                        false -> 0
+                        null -> existing.insistent
+                    }
+                    val displayName = sub.display_name ?: existing.displayName
+                    if (existing.mutedUntil != mutedUntil || existing.minPriority != minPriority ||
+                        existing.autoDelete != autoDelete || existing.insistent != insistent ||
+                        existing.displayName != displayName
+                    ) {
+                        repository.updateSubscription(
+                            existing.copy(
+                                mutedUntil = mutedUntil,
+                                minPriority = minPriority,
+                                autoDelete = autoDelete,
+                                insistent = insistent,
+                                displayName = displayName
+                            )
+                        )
                     }
                 }
             }
