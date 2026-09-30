@@ -135,20 +135,26 @@ class PairingActivity : AppCompatActivity() {
             // agent channel): subscriptions absent from the config are removed.
             // Default stays add-only — removal remains a human action unless the
             // owner explicitly granted full control for this device.
+            // Full management removals apply to THIS channel's server only —
+            // foreign servers (added below) keep their human-managed state
             if (config.manage == "full") {
-                val wanted = config.subscriptions.orEmpty().map { it.topic }.toSet()
+                val wanted = config.subscriptions.orEmpty().filter { it.base_url.isNullOrEmpty() || it.base_url == baseUrl }.map { it.topic }.toSet()
                 val locals = repository.getSubscriptions().filter { it.baseUrl == baseUrl && it.upAppId == null }
                 locals.filter { it.topic !in wanted }.forEach { repository.removeSubscription(it) }
             }
             var added = 0
             config.subscriptions.orEmpty().forEach { sub ->
                 if (sub.topic.isEmpty()) return@forEach
-                val existing = repository.getSubscription(baseUrl, sub.topic)
+                // Cross-server: the config may manage subscriptions on other
+                // ntfy servers too (base_url per entry); auth comes from the
+                // credentials the app already stores per server.
+                val subBaseUrl = sub.base_url?.takeIf { it.isNotBlank() } ?: baseUrl
+                val existing = repository.getSubscription(subBaseUrl, sub.topic)
                 if (existing == null) {
                     repository.addSubscription(
                         Subscription(
                             id = randomSubscriptionId(),
-                            baseUrl = baseUrl,
+                            baseUrl = subBaseUrl,
                             topic = sub.topic,
                             instant = false,
                             dedicatedChannels = false,

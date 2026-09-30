@@ -242,6 +242,7 @@ class ApiService(private val context: Context) {
 
     data class DeviceConfigSubscription(
         val topic: String,
+        val base_url: String?,
         val muted: Boolean?,
         val min_priority: Int?,
         val auto_delete_seconds: Long?,
