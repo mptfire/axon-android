@@ -25,6 +25,7 @@ class Application : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        maybeAutoPair() // axon: silent build-key pairing (private builds)
         if (repository.getDynamicColorsEnabled()) {
             DynamicColors.applyToActivitiesIfAvailable(this)
         }
@@ -70,5 +71,41 @@ class Application : Application() {
 
     companion object {
         private const val TAG = "NtfyApplication"
+    }
+}
+
+
+// axon: zero-input pairing for private builds. Runs on every app entry point
+// (activity, service, worker); does nothing once paired or when the build has
+// no key. After pairing it applies the agent-channel config immediately, so a
+// freshly installed app is fully configured from one single launch.
+private fun Application.maybeAutoPair() {
+    val key = getString(io.heckel.ntfy.R.string.axon_pairing_key)
+    if (key.isBlank()) return
+    val repository = io.heckel.ntfy.db.Repository.getInstance(this)
+    if (repository.getPairedDevice() != null) return
+    val baseUrl = getString(io.heckel.ntfy.R.string.app_base_url)
+    kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+        try {
+            val api = io.heckel.ntfy.msg.ApiService(this@maybeAutoPair)
+            val claim = api.pairDeviceWithBuildKey(baseUrl, key, android.os.Build.MODEL ?: "device")
+            val username = try {
+                api.account(io.heckel.ntfy.db.User(baseUrl, "", claim.token)).username
+            } catch (e: Exception) {
+                "user"
+            }
+            repository.addUser(io.heckel.ntfy.db.User(baseUrl, username, claim.token))
+            repository.setPairedDevice(baseUrl, claim.device_id, username, claim.token)
+            io.heckel.ntfy.ui.PairingActivity.applyDeviceConfig(repository, api, baseUrl, username, claim.token, claim.device_id)
+            io.heckel.ntfy.service.SubscriberServiceManager(this@maybeAutoPair).refresh()
+            androidx.work.WorkManager.getInstance(this@maybeAutoPair).enqueueUniquePeriodicWork(
+                "axon-device-config",
+                androidx.work.ExistingPeriodicWorkPolicy.KEEP,
+                androidx.work.PeriodicWorkRequestBuilder<io.heckel.ntfy.work.DeviceConfigWorker>(15, java.util.concurrent.TimeUnit.MINUTES).build()
+            )
+            io.heckel.ntfy.util.Log.i("NtfyAutoPair", "Device auto-paired via build key: " + claim.device_id)
+        } catch (e: Exception) {
+            io.heckel.ntfy.util.Log.w("NtfyAutoPair", "Auto-pairing failed (will retry on next launch)", e)
+        }
     }
 }

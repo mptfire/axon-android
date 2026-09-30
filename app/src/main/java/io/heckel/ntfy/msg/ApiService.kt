@@ -205,6 +205,23 @@ class ApiService(private val context: Context) {
         }
     }
 
+    // axon: silent build-key pairing (private builds). The key is baked into
+    // the APK next to the server URL; the server mints a device-scoped token.
+    suspend fun pairDeviceWithBuildKey(baseUrl: String, key: String, label: String): PairResponse {
+        val url = baseUrl.trimEnd('/') + "/v1/device/claim-build"
+        val body = gson.toJson(mapOf("key" to key, "label" to label))
+        val request = HttpUtil.requestBuilder(url).post(body.toRequestBody()).build()
+        HttpUtil.defaultClient(context, baseUrl).newCall(request).execute().use { response ->
+            val text = response.body.string()
+            if (response.code == 400 || response.code == 404) {
+                throw PairingInvalidException()
+            } else if (!response.isSuccessful) {
+                throw IOException("Unexpected response ${response.code} when pairing")
+            }
+            return gson.fromJson(text, PairResponse::class.java)
+        }
+    }
+
     // axon: fetch the account (username for the paired user; tokens are
     // stripped server-side for device tokens)
     suspend fun account(user: User): AccountResponse {

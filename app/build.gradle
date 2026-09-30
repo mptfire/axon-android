@@ -23,11 +23,15 @@ android {
         }
         applicationId "app.axon"
         resValue "string", "app_base_url", axonProps.getProperty("AXON_BASE_URL", "https://ntfy.sh")
+        // axon: optional build-time pairing key (private builds). With this set,
+        // the app pairs itself silently on first launch — no code, no tap.
+        // Public/CI builds have no key and keep the manual pairing screen.
+        resValue "string", "axon_pairing_key", axonProps.getProperty("AXON_PAIRING_KEY", "")
         minSdkVersion 26
         targetSdkVersion 36
 
-        versionCode 104
-        versionName "1.4-axon"
+        versionCode 105
+        versionName "1.5-axon"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
