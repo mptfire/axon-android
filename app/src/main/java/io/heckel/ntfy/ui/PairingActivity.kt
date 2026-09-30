@@ -52,15 +52,21 @@ class PairingActivity : AppCompatActivity() {
 
         baseUrlView.setText(getString(R.string.app_base_url))
 
-        // Deep link: axon://pair/<code>[?auto=1]. With auto=1 (fired by the
-        // user's AI agent, which minted the code server-side) pairing runs
-        // immediately — no tap. The code itself is the credential.
+        // Deep link: axon://pair/<code>[?auto=1][&server=https://…][&label=…].
+        // With auto=1 (fired by the user's AI agent, which minted the code
+        // server-side) pairing runs immediately — no tap. server=/label= make
+        // that zero-input end to end: the claim target is the very server that
+        // minted the code, and codes are single-use with a 5-minute TTL, so
+        // this is equivalent to a human typing the URL into these fields. The
+        // code itself is the credential.
         val data = intent?.data
         val autoPair = data != null && data.scheme == "axon" && data.host == "pair" &&
             data.getQueryParameter("auto") == "1"
         wasAutoPair = autoPair
         if (data != null && data.scheme == "axon" && data.host == "pair") {
             codeView.setText(data.pathSegments.firstOrNull() ?: "")
+            data.getQueryParameter("server")?.trim()?.takeIf { it.isNotEmpty() }?.let { baseUrlView.setText(it) }
+            data.getQueryParameter("label")?.trim()?.takeIf { it.isNotEmpty() }?.let { labelView.setText(it) }
         }
         if (autoPair && codeView.text.isNotBlank()) {
             pairButton.performClick()
