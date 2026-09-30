@@ -32,6 +32,7 @@ import kotlinx.coroutines.launch
 class PairingActivity : AppCompatActivity() {
     private lateinit var repository: Repository
     private lateinit var api: ApiService
+    private var wasAutoPair = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,6 +58,7 @@ class PairingActivity : AppCompatActivity() {
         val data = intent?.data
         val autoPair = data != null && data.scheme == "axon" && data.host == "pair" &&
             data.getQueryParameter("auto") == "1"
+        wasAutoPair = autoPair
         if (data != null && data.scheme == "axon" && data.host == "pair") {
             codeView.setText(data.pathSegments.firstOrNull() ?: "")
         }
@@ -87,11 +89,24 @@ class PairingActivity : AppCompatActivity() {
                     repository.setPairedDevice(baseUrl, claim.device_id, username, claim.token)
                     val added = applyDeviceConfig(repository, api, baseUrl, username, claim.token, claim.device_id)
                     SubscriberServiceManager(this@PairingActivity).refresh()
+                    // Schedule the periodic agent-channel sync here too: an
+                    // agent-driven pairing may never open MainActivity
+                    androidx.work.WorkManager.getInstance(this@PairingActivity).enqueueUniquePeriodicWork(
+                        "axon-device-config",
+                        androidx.work.ExistingPeriodicWorkPolicy.KEEP,
+                        androidx.work.PeriodicWorkRequestBuilder<io.heckel.ntfy.work.DeviceConfigWorker>(15, java.util.concurrent.TimeUnit.MINUTES).build()
+                    )
                     launch(Dispatchers.Main) {
                         setBusy(false, progress, pairButton, statusView)
                         statusView.text = getString(R.string.pairing_success, username, added)
-                        pairButton.text = getString(R.string.pairing_done)
-                        pairButton.setOnClickListener { finish() }
+                        if (wasAutoPair) {
+                            // Agent-driven: flash the result and dismiss — no
+                            // lingering screen, no tap needed
+                            android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ finish() }, 1500)
+                        } else {
+                            pairButton.text = getString(R.string.pairing_done)
+                            pairButton.setOnClickListener { finish() }
+                        }
                     }
                 } catch (e: ApiService.PairingInvalidException) {
                     launch(Dispatchers.Main) {
