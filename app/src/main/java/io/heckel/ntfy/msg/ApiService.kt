@@ -238,7 +238,7 @@ class ApiService(private val context: Context) {
 
     data class AccountResponse(val username: String)
 
-    data class DeviceConfig(val subscriptions: List<DeviceConfigSubscription>?)
+    data class DeviceConfig(val subscriptions: List<DeviceConfigSubscription>?, val manage: String?)
 
     data class DeviceConfigSubscription(val topic: String, val muted: Boolean?, val min_priority: Int?)
 

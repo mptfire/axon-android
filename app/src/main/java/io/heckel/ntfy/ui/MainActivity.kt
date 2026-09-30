@@ -405,6 +405,16 @@ class MainActivity : AppCompatActivity(), AddFragment.SubscribeListener, Notific
         showHideNoNetworkBanner()
         redrawList()
         maybeApplyDeviceConfig() // axon: agent channel
+        enqueueDeviceConfigSync() // axon: periodic agent-channel sync
+    }
+
+    // axon: agent channel — periodic config sync so agent changes land
+    // without the user opening the app (every ~15 min, battery-friendly)
+    private fun enqueueDeviceConfigSync() {
+        val manager = workManager ?: return
+        if (repository.getPairedDevice() == null) return // Nothing paired yet
+        val request = androidx.work.PeriodicWorkRequestBuilder<io.heckel.ntfy.work.DeviceConfigWorker>(15, java.util.concurrent.TimeUnit.MINUTES).build()
+        manager.enqueueUniquePeriodicWork("axon-device-config", androidx.work.ExistingPeriodicWorkPolicy.KEEP, request)
     }
 
     override fun onNewIntent(intent: android.content.Intent) {

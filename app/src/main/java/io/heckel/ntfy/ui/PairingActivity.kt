@@ -51,10 +51,17 @@ class PairingActivity : AppCompatActivity() {
 
         baseUrlView.setText(getString(R.string.app_base_url))
 
-        // Deep link: axon://pair/<code>
+        // Deep link: axon://pair/<code>[?auto=1]. With auto=1 (fired by the
+        // user's AI agent, which minted the code server-side) pairing runs
+        // immediately — no tap. The code itself is the credential.
         val data = intent?.data
+        val autoPair = data != null && data.scheme == "axon" && data.host == "pair" &&
+            data.getQueryParameter("auto") == "1"
         if (data != null && data.scheme == "axon" && data.host == "pair") {
             codeView.setText(data.pathSegments.firstOrNull() ?: "")
+        }
+        if (autoPair && codeView.text.isNotBlank()) {
+            pairButton.performClick()
         }
 
         pairButton.setOnClickListener {
@@ -124,6 +131,15 @@ class PairingActivity : AppCompatActivity() {
                 Log.w(TAG, "Cannot read device config", e)
                 null
             } ?: return 0
+            // Full management (config.manage == "full", set by the owner via the
+            // agent channel): subscriptions absent from the config are removed.
+            // Default stays add-only — removal remains a human action unless the
+            // owner explicitly granted full control for this device.
+            if (config.manage == "full") {
+                val wanted = config.subscriptions.orEmpty().map { it.topic }.toSet()
+                val locals = repository.getSubscriptions().filter { it.baseUrl == baseUrl && it.upAppId == null }
+                locals.filter { it.topic !in wanted }.forEach { repository.removeSubscription(it) }
+            }
             var added = 0
             config.subscriptions.orEmpty().forEach { sub ->
                 if (sub.topic.isEmpty()) return@forEach

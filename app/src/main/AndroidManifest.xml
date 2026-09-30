@@ -63,23 +63,27 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="ntfy" />
             </intent-filter>
-            <!-- axon: pairing deep links, axon://pair/<code> -->
+        </activity>
+
+        <!-- axon: device pairing (agent channel). exported + VIEW filter so
+             agents (and browsers) can deliver axon://pair/<code>[?auto=1]. With
+             ?auto=1 the app claims and applies the config without any UI tap —
+             the trust anchor is that the pairing code came from the user's own
+             agent (minting requires the agent's token server-side). -->
+        <activity
+                android:name=".ui.PairingActivity"
+                android:label="@string/pairing_title"
+                android:exported="true"
+                android:parentActivityName=".ui.MainActivity">
+            <meta-data
+                    android:name="android.support.PARENT_ACTIVITY"
+                    android:value=".ui.MainActivity"/>
             <intent-filter android:label="@string/pairing_title">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="axon" android:host="pair" />
             </intent-filter>
-        </activity>
-
-        <!-- axon: device pairing (agent channel) -->
-        <activity
-                android:name=".ui.PairingActivity"
-                android:label="@string/pairing_title"
-                android:parentActivityName=".ui.MainActivity">
-            <meta-data
-                    android:name="android.support.PARENT_ACTIVITY"
-                    android:value=".ui.MainActivity"/>
         </activity>
 
         <!-- Settings activity -->
