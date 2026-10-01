@@ -30,7 +30,7 @@ android {
         minSdkVersion 26
         targetSdkVersion 36
 
-        versionCode 110
+        versionCode 111
         versionName "1.6-axon"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"

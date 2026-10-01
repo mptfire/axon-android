@@ -75,7 +75,17 @@ object HttpUtil {
             .url(url)
             .addHeader("User-Agent", USER_AGENT)
         if (user != null) {
-            builder.addHeader("Authorization", Credentials.basic(user.username, user.password, UTF_8))
+            // axon: device-scope tokens (tk_…) authenticate only via Bearer —
+            // the server rejects them in Basic auth in any form. Password
+            // logins keep the upstream Basic(user, password) behavior.
+            when {
+                user.password.startsWith("tk_") ->
+                    builder.addHeader("Authorization", "Bearer ${user.password}")
+                user.username.startsWith("tk_") ->
+                    builder.addHeader("Authorization", "Bearer ${user.username}")
+                else ->
+                    builder.addHeader("Authorization", Credentials.basic(user.username, user.password, UTF_8))
+            }
         }
         customHeaders.forEach { header ->
             builder.addHeader(header.name, header.value)
