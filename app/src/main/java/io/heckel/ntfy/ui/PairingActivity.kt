@@ -111,7 +111,14 @@ class PairingActivity : AppCompatActivity() {
                     } catch (e: Exception) {
                         "user"
                     }
-                    repository.addUser(User(baseUrl, username, claim.token))
+                    // Upsert: a pre-pairing manual login leaves a User row for
+                    // this server; plain insert would abort and leave the app
+                    // paired server-side but unpaired locally
+                    if (repository.getUser(baseUrl) != null) {
+                        repository.updateUser(User(baseUrl, username, claim.token))
+                    } else {
+                        repository.addUser(User(baseUrl, username, claim.token))
+                    }
                     repository.setPairedDevice(baseUrl, claim.device_id, username, claim.token)
                     val added = applyDeviceConfig(repository, api, baseUrl, username, claim.token, claim.device_id)
                     SubscriberServiceManager(this@PairingActivity).refresh()
