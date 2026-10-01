@@ -33,19 +33,28 @@ class DevicePairingWorker(context: Context, params: WorkerParameters) : Coroutin
             // Username for display; device tokens get the account with token
             // values stripped server-side
             val username = try {
-                api.account(User(baseUrl, "", claim.token)).username
+                api.account(User(baseUrl, "", claim.token)).username ?: "user"
             } catch (e: Exception) {
+                Log.w(TAG, "Account lookup failed after claim (continuing)", e)
                 "user"
             }
-            // Upsert: a pre-pairing manual login leaves a User row for this
-            // server; plain insert would abort and leave the app paired
-            // server-side but unpaired locally
-            if (repository.getUser(baseUrl) != null) {
-                repository.updateUser(User(baseUrl, username, claim.token))
-            } else {
-                repository.addUser(User(baseUrl, username, claim.token))
-            }
+            // axon: pair locally FIRST — everything below is best-effort. The
+            // previous order meant any failure left the app paired on the
+            // server but locally unpaired, and every agent-channel sync
+            // silently skipped.
             repository.setPairedDevice(baseUrl, claim.device_id, username, claim.token)
+            try {
+                // Upsert: a pre-pairing manual login leaves a User row for
+                // this server; plain insert would abort and leave the app
+                // paired server-side but unpaired locally
+                if (repository.getUser(baseUrl) != null) {
+                    repository.updateUser(User(baseUrl, username, claim.token))
+                } else {
+                    repository.addUser(User(baseUrl, username, claim.token))
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "User upsert after claim failed (continuing)", e)
+            }
             PairingActivity.applyDeviceConfig(repository, api, baseUrl, username, claim.token, claim.device_id)
             SubscriberServiceManager(applicationContext).refresh()
             // Schedule the periodic agent-channel sync: an agent-driven pairing

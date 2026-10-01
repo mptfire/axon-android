@@ -90,19 +90,25 @@ private fun Application.maybeAutoPair() {
             val api = io.heckel.ntfy.msg.ApiService(this@maybeAutoPair)
             val claim = api.pairDeviceWithBuildKey(baseUrl, key, android.os.Build.MODEL ?: "device")
             val username = try {
-                api.account(io.heckel.ntfy.db.User(baseUrl, "", claim.token)).username
+                api.account(io.heckel.ntfy.db.User(baseUrl, "", claim.token)).username ?: "user"
             } catch (e: Exception) {
+                io.heckel.ntfy.util.Log.w("NtfyAutoPair", "Account lookup failed after claim (continuing)", e)
                 "user"
             }
-            // Upsert: a pre-pairing manual login leaves a User row for this
-            // server; plain insert would abort and leave the app paired
-            // server-side but unpaired locally
-            if (repository.getUser(baseUrl) != null) {
-                repository.updateUser(io.heckel.ntfy.db.User(baseUrl, username, claim.token))
-            } else {
-                repository.addUser(io.heckel.ntfy.db.User(baseUrl, username, claim.token))
-            }
+            // axon: pair locally FIRST — everything below is best-effort
             repository.setPairedDevice(baseUrl, claim.device_id, username, claim.token)
+            try {
+                // Upsert: a pre-pairing manual login leaves a User row for this
+                // server; plain insert would abort and leave the app paired
+                // server-side but unpaired locally
+                if (repository.getUser(baseUrl) != null) {
+                    repository.updateUser(io.heckel.ntfy.db.User(baseUrl, username, claim.token))
+                } else {
+                    repository.addUser(io.heckel.ntfy.db.User(baseUrl, username, claim.token))
+                }
+            } catch (e: Exception) {
+                io.heckel.ntfy.util.Log.w("NtfyAutoPair", "User upsert after claim failed (continuing)", e)
+            }
             io.heckel.ntfy.ui.PairingActivity.applyDeviceConfig(repository, api, baseUrl, username, claim.token, claim.device_id)
             io.heckel.ntfy.service.SubscriberServiceManager(this@maybeAutoPair).refresh()
             androidx.work.WorkManager.getInstance(this@maybeAutoPair).enqueueUniquePeriodicWork(

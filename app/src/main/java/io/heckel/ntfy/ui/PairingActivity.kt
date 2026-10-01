@@ -104,22 +104,27 @@ class PairingActivity : AppCompatActivity() {
             lifecycleScope.launch(Dispatchers.IO) {
                 try {
                     val claim = api.pairDevice(baseUrl, code, label)
-                    // Username for display; device tokens get the account with
-                    // token values stripped server-side
+                    // axon: pair locally FIRST — account lookup and user upsert
+                    // are best-effort; see DevicePairingWorker for rationale
                     val username = try {
-                        api.account(User(baseUrl, "", claim.token)).username
+                        api.account(User(baseUrl, "", claim.token)).username ?: "user"
                     } catch (e: Exception) {
+                        Log.w(TAG, "Account lookup failed after claim (continuing)", e)
                         "user"
                     }
-                    // Upsert: a pre-pairing manual login leaves a User row for
-                    // this server; plain insert would abort and leave the app
-                    // paired server-side but unpaired locally
-                    if (repository.getUser(baseUrl) != null) {
-                        repository.updateUser(User(baseUrl, username, claim.token))
-                    } else {
-                        repository.addUser(User(baseUrl, username, claim.token))
-                    }
                     repository.setPairedDevice(baseUrl, claim.device_id, username, claim.token)
+                    try {
+                        // Upsert: a pre-pairing manual login leaves a User row
+                        // for this server; plain insert would abort and leave
+                        // the app paired server-side but unpaired locally
+                        if (repository.getUser(baseUrl) != null) {
+                            repository.updateUser(User(baseUrl, username, claim.token))
+                        } else {
+                            repository.addUser(User(baseUrl, username, claim.token))
+                        }
+                    } catch (e: Exception) {
+                        Log.w(TAG, "User upsert after claim failed (continuing)", e)
+                    }
                     val added = applyDeviceConfig(repository, api, baseUrl, username, claim.token, claim.device_id)
                     SubscriberServiceManager(this@PairingActivity).refresh()
                     // Schedule the periodic agent-channel sync here too: an
