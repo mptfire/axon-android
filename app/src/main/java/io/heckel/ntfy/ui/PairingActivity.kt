@@ -89,6 +89,25 @@ class PairingActivity : AppCompatActivity() {
                     .build()
             )
             finish()
+            // axon: the agent channel lives on background sync — ask once for
+            // the battery-optimization exemption. Android has no silent way
+            // for an app to exempt itself (by design); this system dialog is
+            // the code-side equivalent of the settings detour.
+            try {
+                val power = getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
+                val prefs = getSharedPreferences("axon_pairing", Context.MODE_PRIVATE)
+                if (!power.isIgnoringBatteryOptimizations(packageName) &&
+                    !prefs.getBoolean("battery_prompted", false)
+                ) {
+                    prefs.edit().putBoolean("battery_prompted", true).apply()
+                    startActivity(android.content.Intent(
+                        android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+                        android.net.Uri.parse("package:$packageName")
+                    ))
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Battery exemption prompt failed", e)
+            }
             return
         }
 
@@ -194,6 +213,16 @@ class PairingActivity : AppCompatActivity() {
                 val wanted = config.subscriptions.orEmpty().filter { it.base_url.isNullOrEmpty() || it.base_url == baseUrl }.map { it.topic }.toSet()
                 val locals = repository.getSubscriptions().filter { it.baseUrl == baseUrl && it.upAppId == null }
                 locals.filter { it.topic !in wanted }.forEach { repository.removeSubscription(it) }
+                // axon: full management owns the device's whole subscription
+                // surface, not just this server's slice — prune anonymous
+                // leftovers on other base_urls too (e.g. junk rows created by
+                // the pre-axon.6 deep-link mis-parse). Servers WITH stored
+                // credentials are deliberate user-managed logins: untouched.
+                val configuredUrls = config.subscriptions.orEmpty().mapNotNull { it.base_url?.takeIf { b -> b.isNotBlank() } }.toSet() + baseUrl
+                repository.getSubscriptions()
+                    .filter { it.upAppId == null && it.baseUrl !in configuredUrls }
+                    .filter { repository.getUser(it.baseUrl) == null }
+                    .forEach { repository.removeSubscription(it) }
             }
             var added = 0
             config.subscriptions.orEmpty().forEach { sub ->
