@@ -434,11 +434,17 @@ class MainActivity : AppCompatActivity(), AddFragment.SubscribeListener, Notific
     // axon: agent channel — on app start, apply the paired device's config so
     // agent-made changes (subscribe/mute) land in the app without UI work
     private fun maybeApplyDeviceConfig() {
-        val paired = repository.getPairedDevice() ?: return
+        val paired = repository.getPairedDevice()
+        if (paired == null) {
+            io.heckel.ntfy.util.Log.i(TAG, "Device config sync skipped: not paired")
+            return
+        }
+        io.heckel.ntfy.util.Log.i(TAG, "Device config sync on app open: device=" + paired.deviceId)
         val api = io.heckel.ntfy.msg.ApiService(this)
         lifecycleScope.launch(kotlinx.coroutines.Dispatchers.IO) {
             try {
                 val added = PairingActivity.applyDeviceConfig(repository, api, paired.baseUrl, paired.username, paired.token, paired.deviceId)
+                io.heckel.ntfy.util.Log.i(TAG, "Device config sync done: added=" + added)
                 if (added > 0) {
                     io.heckel.ntfy.service.SubscriberServiceManager(this@MainActivity).refresh()
                     launch(kotlinx.coroutines.Dispatchers.Main) { redrawList() }
