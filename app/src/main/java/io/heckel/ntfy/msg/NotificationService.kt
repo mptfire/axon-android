@@ -95,6 +95,10 @@ class NotificationService(val context: Context) {
             .setShowWhen(true)
             .setOnlyAlertOnce(true) // Do not vibrate or play sound if already showing (updates!)
             .setAutoCancel(true) // Cancel when notification is clicked
+            // axon: message content is private — on a secure lockscreen show a
+            // redacted placeholder, full content only on unlock. Device-owner
+            // in-app/unlocked behavior is unchanged.
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
         setStyleAndText(builder, subscription, notification) // Preview picture or big text style
         setClickAction(builder, subscription, notification)
         maybeSetDeleteIntent(builder, insistent)
