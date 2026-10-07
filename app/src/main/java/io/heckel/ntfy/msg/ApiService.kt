@@ -260,10 +260,16 @@ class ApiService(private val context: Context) {
     data class DeviceConfigSubscription(
         val topic: String,
         val base_url: String?,
-        val muted: Boolean?,
+        // axon: muted/insistent are tri-state in the config contract (inherit,
+        // off, on). Writers have shipped both booleans and 0/1 ints, and a
+        // type mismatch fails the ENTIRE config sync (Gson throws before any
+        // row is applied). Accept both representations here and interpret
+        // them at the call site, so a sloppy writer degrades to defaults
+        // instead of poisoning the device (issue #4, mptfire/axon#20).
+        val muted: Any?,
         val min_priority: Int?,
         val auto_delete_seconds: Long?,
-        val insistent: Boolean?,
+        val insistent: Any?,
         val display_name: String?
     )
 
