@@ -11,7 +11,6 @@ import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.HorizontalScrollView
 import android.widget.TextView
-import androidx.core.text.HtmlCompat
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.color.MaterialColors
@@ -21,7 +20,6 @@ import io.heckel.ntfy.db.ConnectionDetails
 import io.heckel.ntfy.db.Repository
 import io.heckel.ntfy.service.SubscriberServiceManager
 import io.heckel.ntfy.util.copyToClipboard
-import io.heckel.ntfy.util.shortUrl
 
 class ConnectionErrorFragment : DialogFragment() {
     private lateinit var repository: Repository
