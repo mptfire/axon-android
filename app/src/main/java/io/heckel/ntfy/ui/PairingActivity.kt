@@ -196,6 +196,19 @@ class PairingActivity : AppCompatActivity() {
          * action in the app UI. Returns the number of subscriptions added.
          */
         suspend fun applyDeviceConfig(repository: Repository, api: ApiService, baseUrl: String, username: String, token: String, deviceId: String): Int {
+            // Lenient tri-state for config flags written as bool OR 0/1 (see
+            // ApiService.DeviceConfigSubscription): true/"true"/1 → on,
+            // false/"false"/0 → off, anything else (incl. null) → inherit.
+            fun triFlag(v: Any?): Boolean? = when (v) {
+                is Boolean -> v
+                is Number -> v.toDouble() != 0.0
+                is String -> when (v.lowercase()) {
+                    "true", "1" -> true
+                    "false", "0" -> false
+                    else -> null
+                }
+                else -> null
+            }
             val user = User(baseUrl, username, token)
             val config = try {
                 api.deviceConfig(user, deviceId)
@@ -240,7 +253,7 @@ class PairingActivity : AppCompatActivity() {
                             topic = sub.topic,
                             instant = false,
                             dedicatedChannels = false,
-                            mutedUntil = if (sub.muted == true) Long.MAX_VALUE else 0L,
+                            mutedUntil = if (triFlag(sub.muted) == true) Long.MAX_VALUE else 0L,
                             minPriority = sub.min_priority ?: Repository.MIN_PRIORITY_USE_GLOBAL,
                             autoDelete = Repository.AUTO_DELETE_USE_GLOBAL,
                             insistent = Repository.INSISTENT_MAX_PRIORITY_USE_GLOBAL,
@@ -258,14 +271,14 @@ class PairingActivity : AppCompatActivity() {
                 } else {
                     // Sync every agent-managed per-topic setting; anything the
                     // config omits keeps its current (possibly human-set) value
-                    val mutedUntil = when (sub.muted) {
+                    val mutedUntil = when (triFlag(sub.muted)) {
                         true -> Long.MAX_VALUE
                         false -> 0L
                         null -> existing.mutedUntil
                     }
                     val minPriority = sub.min_priority ?: existing.minPriority
                     val autoDelete = sub.auto_delete_seconds ?: existing.autoDelete
-                    val insistent = when (sub.insistent) {
+                    val insistent = when (triFlag(sub.insistent)) {
                         true -> 1
                         false -> 0
                         null -> existing.insistent
