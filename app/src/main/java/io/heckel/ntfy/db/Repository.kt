@@ -395,7 +395,11 @@ class Repository(private val sharedPrefs: SharedPreferences, database: Database)
     }
 
     fun getBroadcastEnabled(): Boolean {
-        return sharedPrefs.getBoolean(SHARED_PREFS_BROADCAST_ENABLED, true) // Enabled by default
+        // axon: OFF by default — an implicit broadcast carrying notification
+        // title/text/click URL is readable by any installed app that registers
+        // a receiver for the action (privacy audit 2026-10-07, A03/#7).
+        // Users who rely on automation opt in explicitly in Settings.
+        return sharedPrefs.getBoolean(SHARED_PREFS_BROADCAST_ENABLED, false)
     }
 
     fun setBroadcastEnabled(enabled: Boolean) {

@@ -6,6 +6,7 @@ import io.heckel.ntfy.db.Repository
 import io.heckel.ntfy.db.Subscription
 import io.heckel.ntfy.up.Distributor
 import io.heckel.ntfy.util.Log
+import io.heckel.ntfy.util.isFetchableMediaUrl
 import io.heckel.ntfy.util.decodeBytesMessage
 import io.heckel.ntfy.util.safeLet
 
@@ -59,6 +60,10 @@ class NotificationDispatcher(val context: Context, val repository: Repository) {
             return false
         }
         val attachment = notification.attachment
+        if (!attachment.url.isFetchableMediaUrl()) {
+            Log.d(TAG, "Attachment URL fails fetch policy, not downloading")
+            return false
+        }
         if (attachment.expires != null && attachment.expires < System.currentTimeMillis()/1000) {
             Log.d(TAG, "Attachment already expired at ${attachment.expires}, not downloading")
             return false
@@ -75,7 +80,7 @@ class NotificationDispatcher(val context: Context, val repository: Repository) {
         }
     }
     private fun shouldDownloadIcon(notification: Notification): Boolean {
-        return notification.icon?.hasValidUrl() == true && notification.event == ApiService.EVENT_MESSAGE
+        return notification.icon?.hasFetchableUrl() == true && notification.event == ApiService.EVENT_MESSAGE
     }
 
     private fun shouldCancel(notification: Notification): Boolean {

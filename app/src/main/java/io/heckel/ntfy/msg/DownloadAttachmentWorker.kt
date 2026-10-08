@@ -24,6 +24,7 @@ import io.heckel.ntfy.util.HttpUtil
 import io.heckel.ntfy.util.Log
 import io.heckel.ntfy.util.ensureSafeNewFile
 import io.heckel.ntfy.util.extractBaseUrl
+import io.heckel.ntfy.util.isFetchableMediaUrl
 import okhttp3.Response
 import java.io.File
 import kotlin.coroutines.cancellation.CancellationException
@@ -58,6 +59,10 @@ class DownloadAttachmentWorker(private val context: Context, params: WorkerParam
     }
 
     private suspend fun downloadAttachment(userAction: Boolean) {
+        if (!attachment.url.isFetchableMediaUrl()) {
+            Log.w(TAG, "Attachment URL fails fetch policy (https, non-private host required), not downloading")
+            return
+        }
         Log.d(TAG, "Downloading attachment from ${attachment.url}")
 
         try {
