@@ -12,6 +12,9 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
+
 /**
  * axon: mask a secret-shaped string for logging (keep a short prefix so
  * correlation is still possible). Privacy audit 2026-10-07 (#10/A13):
@@ -22,8 +25,6 @@ fun redact(secret: String?, keep: Int = 6): String {
     if (secret.isNullOrEmpty()) return "<none>"
     return if (secret.length <= keep) "…" else secret.take(keep) + "…"
 }
-import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 
 class Log(private val logsDao: LogDao) {
     private val record: AtomicBoolean = AtomicBoolean(false)
