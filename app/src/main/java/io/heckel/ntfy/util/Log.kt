@@ -1,5 +1,16 @@
 package io.heckel.ntfy.util
 
+/**
+ * axon: mask a secret-shaped string for logging (keep a short prefix so
+ * correlation is still possible). Privacy audit 2026-10-07 (#10/A13):
+ * connector tokens, device/account tokens, and credentials must never hit
+ * logcat raw.
+ */
+fun redact(secret: String?, keep: Int = 6): String {
+    if (secret.isNullOrEmpty()) return "<none>"
+    return if (secret.length <= keep) "…" else secret.take(keep) + "…"
+}
+
 import android.content.Context
 import android.os.Build
 import io.heckel.ntfy.BuildConfig

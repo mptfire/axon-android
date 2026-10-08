@@ -89,7 +89,7 @@ class ApiService(private val context: Context) {
         val request = HttpUtil.requestBuilder(urlWithQuery, user, customHeaders)
             .put(body ?: message.toRequestBody())
             .build()
-        Log.d(TAG, "Publishing to $request")
+        Log.d(TAG, "Publishing to ${request.url} (headers redacted)")
         val httpCall = HttpUtil.longCallClient(context, baseUrl).newCall(request)
         onCancelAvailable?.invoke { httpCall.cancel() } // Notify caller that HTTP request can now be canceled
         httpCall.execute().use { response ->

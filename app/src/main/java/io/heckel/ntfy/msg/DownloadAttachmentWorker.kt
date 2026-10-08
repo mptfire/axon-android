@@ -66,7 +66,7 @@ class DownloadAttachmentWorker(private val context: Context, params: WorkerParam
             val request = HttpUtil.requestBuilder(attachment.url, user, customHeaders).build()
             val client = HttpUtil.longCallClient(context, extractBaseUrl(attachment.url))
             client.newCall(request).execute().use { response ->
-                Log.d(TAG, "Download: headers received: $response")
+                Log.d(TAG, "Download: headers received (${response.code}, headers redacted)")
                 if (!response.isSuccessful) {
                     throw Exception("Unexpected response: ${response.code}")
                 }

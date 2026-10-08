@@ -41,7 +41,7 @@ class BroadcastReceiver : android.content.BroadcastReceiver() {
         val app = context.applicationContext as Application
         val repository = app.repository
         val distributor = Distributor(app)
-        Log.d(TAG, "REGISTER received for app $appId (connectorToken=$connectorToken)")
+        Log.d(TAG, "REGISTER received for app $appId (connectorToken=${redact(connectorToken)})")
         if (!repository.getUnifiedPushEnabled()) {
             Log.w(TAG, "Refusing registration because 'EnableUP' is disabled")
             // Action required: tell the app to not try again before an action as be done manuall by the user
@@ -64,7 +64,7 @@ class BroadcastReceiver : android.content.BroadcastReceiver() {
                 if (existingSubscription != null) {
                     if (existingSubscription.upAppId == appId) {
                         val endpoint = topicUrlUp(existingSubscription.baseUrl, existingSubscription.topic)
-                        Log.d(TAG, "Subscription with connectorToken $connectorToken exists. Sending endpoint $endpoint.")
+                        Log.d(TAG, "Subscription with connectorToken ${redact(connectorToken)} exists. Sending endpoint $endpoint.")
                         distributor.sendEndpoint(appId, connectorToken, endpoint)
                     } else {
                         Log.d(TAG, "Subscription with connectorToken $connectorToken exists for a different app. Refusing registration.")
@@ -97,7 +97,7 @@ class BroadcastReceiver : android.content.BroadcastReceiver() {
                     newCount = 0,
                     lastActive = Date().time/1000
                 )
-                Log.d(TAG, "Adding subscription with for app $appId (connectorToken $connectorToken): $subscription")
+                Log.d(TAG, "Adding subscription for app $appId (connectorToken ${redact(connectorToken)})")
                 try {
                     // Note, this may fail due to a SQL constraint exception, see https://github.com/binwiederhier/ntfy/issues/185
                     repository.addSubscription(subscription)
@@ -198,7 +198,7 @@ class BroadcastReceiver : android.content.BroadcastReceiver() {
         val app = context.applicationContext as Application
         val repository = app.repository
         val distributor = Distributor(app)
-        Log.d(TAG, "UNREGISTER received (connectorToken=$connectorToken)")
+        Log.d(TAG, "UNREGISTER received (connectorToken=${redact(connectorToken)})")
         GlobalScope.launch(Dispatchers.IO) {
             // We're doing all of this inside a critical section, because of possible races.
             // See https://github.com/binwiederhier/ntfy/issues/230 for details.
@@ -206,7 +206,7 @@ class BroadcastReceiver : android.content.BroadcastReceiver() {
             mutex.withLock {
                 val existingSubscription = repository.getSubscriptionByConnectorToken(connectorToken)
                 if (existingSubscription == null) {
-                    Log.d(TAG, "Subscription with connectorToken $connectorToken does not exist. Ignoring.")
+                    Log.d(TAG, "Subscription with connectorToken ${redact(connectorToken)} does not exist. Ignoring.")
                     return@launch
                 }
 
