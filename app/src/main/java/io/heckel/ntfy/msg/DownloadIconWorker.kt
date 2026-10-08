@@ -36,7 +36,7 @@ class DownloadIconWorker(private val context: Context, params: WorkerParameters)
         notification = repository.getNotification(notificationId) ?: return Result.failure()
         subscription = repository.getSubscription(notification.subscriptionId) ?: return Result.failure()
         icon = notification.icon ?: return Result.failure()
-        if (!icon.hasValidUrl()) {
+        if (!icon.hasFetchableUrl()) {
             Log.w(TAG, "Icon has no valid URL, skipping download")
             return Result.failure()
         }

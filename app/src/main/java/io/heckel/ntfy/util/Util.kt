@@ -10,6 +10,7 @@ import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.RippleDrawable
+import java.net.URL
 import android.net.ConnectivityManager
 import android.net.Uri
 import android.os.Build
@@ -553,4 +554,42 @@ fun deriveNotificationId(baseUrl: String, topic: String, sequenceId: String): In
 fun isNetworkAvailable(context: Context): Boolean {
     val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     return connectivityManager.activeNetwork != null
+}
+
+/**
+ * axon: media fetch policy (privacy audit 2026-10-07, #8/A16). Message
+ * content is untrusted input, and attachments/icons are auto-fetched —
+ * so a URL only qualifies for automatic fetching when it is https, has a
+ * plain host, no userinfo, and does not name a loopback/private/
+ * link-local address. Hostname-based (.local/.internal) and IP-literal
+ * private ranges are rejected without DNS lookups.
+ */
+fun String?.isFetchableMediaUrl(): Boolean {
+    if (this == null) return false
+    val parsed = try {
+        URL(this)
+    } catch (e: Exception) {
+        return false
+    }
+    if (parsed.protocol != "https") return false
+    if (!parsed.userInfo.isNullOrEmpty()) return false
+    val host = parsed.host?.lowercase() ?: return false
+    if (host.isEmpty()) return false
+    if (host == "localhost" || host.endsWith(".localhost") || host.endsWith(".local") || host.endsWith(".internal")) return false
+    if (host.contains(":")) { // IPv6 literal
+        if (host == "::" || host == "::1" || host.startsWith("fc") || host.startsWith("fd") || host.startsWith("fe80")) return false
+        return true
+    }
+    if (host.first().isDigit()) { // IPv4 literal
+        val dotted = if (host.endsWith(".")) host else "$host."
+        if (Regex("^0\\.").containsMatchIn(dotted) ||
+            Regex("^127\\.").containsMatchIn(dotted) ||
+            Regex("^10\\.").containsMatchIn(dotted) ||
+            Regex("^192\\.168\\.").containsMatchIn(dotted) ||
+            Regex("^169\\.254\\.").containsMatchIn(dotted) ||
+            Regex("^172\\.(1[6-9]|2\\d|3[01])\\.").containsMatchIn(dotted) ||
+            Regex("^100\\.(6[4-9]|[7-9]\\d|1[01]\\d|12[0-7])\\.").containsMatchIn(dotted)
+        ) return false
+    }
+    return true
 }
