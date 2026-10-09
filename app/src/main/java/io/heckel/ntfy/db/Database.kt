@@ -24,6 +24,7 @@ import io.heckel.ntfy.msg.ApiService
 import io.heckel.ntfy.service.NotAuthorizedException
 import io.heckel.ntfy.service.WebSocketNotSupportedException
 import io.heckel.ntfy.service.hasCause
+import io.heckel.ntfy.util.isFetchableMediaUrl
 import kotlinx.coroutines.flow.Flow
 import java.lang.reflect.Type
 import java.net.ConnectException
