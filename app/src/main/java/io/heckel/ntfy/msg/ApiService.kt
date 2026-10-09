@@ -2,6 +2,7 @@ package io.heckel.ntfy.msg
 
 import android.content.Context
 import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 import io.heckel.ntfy.db.Notification
 import io.heckel.ntfy.db.Repository
 import io.heckel.ntfy.db.Subscription
@@ -235,18 +236,44 @@ class ApiService(private val context: Context) {
         }
     }
 
-    // axon: read this device's agent-channel config (applied on sync)
+    // axon: read this device's agent-channel config (applied on sync).
+    // Throws typed outcomes instead of silently returning null (audit A11/#2):
+    // DeviceRevokedException → auth rejected, stop syncing;
+    // DeviceConfigFormatException → blob unusable, retry per caller;
+    // IOException → transient, retry per caller.
     suspend fun deviceConfig(user: User, deviceId: String): DeviceConfig? {
         val url = user.baseUrl.trimEnd('/') + "/v1/device/" + deviceId + "/config"
         val customHeaders = repository.getCustomHeaders(user.baseUrl)
         val request = HttpUtil.requestBuilder(url, user, customHeaders).build()
         HttpUtil.defaultClient(context, user.baseUrl).newCall(request).execute().use { response ->
             if (response.code == 401 || response.code == 403) {
-                return null // device was unpaired server-side; stop syncing
+                throw DeviceRevokedException() // device was unpaired server-side; stop syncing
             } else if (!response.isSuccessful) {
                 throw IOException("Unexpected response ${response.code} when reading device config")
             }
-            return gson.fromJson(response.body.string(), DeviceConfig::class.java)
+            try {
+                return gson.fromJson(response.body.string(), DeviceConfig::class.java)
+            } catch (e: JsonSyntaxException) {
+                throw DeviceConfigFormatException()
+            } catch (e: IllegalStateException) {
+                throw DeviceConfigFormatException()
+            }
+        }
+    }
+
+    // axon: report that the device has applied the current config (#22).
+    // Version-less: the server records its current config_version.
+    suspend fun deviceAppliedAck(user: User, deviceId: String) {
+        val url = user.baseUrl.trimEnd('/') + "/v1/device/" + deviceId + "/applied"
+        val customHeaders = repository.getCustomHeaders(user.baseUrl)
+        val request = HttpUtil.requestBuilder(url, user, customHeaders)
+            .post("{}".toRequestBody())
+            .build()
+        HttpUtil.defaultClient(context, user.baseUrl).newCall(request).execute().use { response ->
+            // 401/403 mid-flight: the next sync will surface the revocation.
+            if (!response.isSuccessful && response.code != 401 && response.code != 403) {
+                throw IOException("Unexpected response ${response.code} when acking applied config")
+            }
         }
     }
 
@@ -273,6 +300,8 @@ class ApiService(private val context: Context) {
     )
 
     class PairingInvalidException : Exception("pairing code invalid, expired, or already used")
+    class DeviceRevokedException : Exception("device token rejected — unpaired or revoked")
+    class DeviceConfigFormatException : Exception("device config could not be parsed")
 
     class UnauthorizedException(val user: User?) : Exception()
     class EntityTooLargeException : Exception()
