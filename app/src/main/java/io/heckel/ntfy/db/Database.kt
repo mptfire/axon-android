@@ -218,6 +218,10 @@ data class Icon(
             this(url, null)
 
     fun hasValidUrl(): Boolean = !url.isNullOrEmpty()
+
+    // axon: fetch policy — auto-downloading an icon is different from storing
+    // its URL; only https, non-private hosts qualify (#8/A16)
+    fun hasFetchableUrl(): Boolean = url.isFetchableMediaUrl()
 }
 
 @Entity
