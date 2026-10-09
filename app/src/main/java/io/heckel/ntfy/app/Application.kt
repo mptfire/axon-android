@@ -109,7 +109,11 @@ private fun Application.maybeAutoPair() {
             } catch (e: Exception) {
                 io.heckel.ntfy.util.Log.w("NtfyAutoPair", "User upsert after claim failed (continuing)", e)
             }
-            io.heckel.ntfy.ui.PairingActivity.applyDeviceConfig(repository, api, baseUrl, username, claim.token, claim.device_id)
+            try {
+                io.heckel.ntfy.ui.PairingActivity.applyDeviceConfig(repository, api, baseUrl, username, claim.token, claim.device_id)
+            } catch (e: Exception) {
+                io.heckel.ntfy.util.Log.w("NtfyAutoPair", "Config sync after auto-pair failed (scheduled sync will retry)", e)
+            }
             io.heckel.ntfy.service.SubscriberServiceManager(this@maybeAutoPair).refresh()
             androidx.work.WorkManager.getInstance(this@maybeAutoPair).enqueueUniquePeriodicWork(
                 "axon-device-config",

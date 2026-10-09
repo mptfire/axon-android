@@ -55,7 +55,11 @@ class DevicePairingWorker(context: Context, params: WorkerParameters) : Coroutin
             } catch (e: Exception) {
                 Log.w(TAG, "User upsert after claim failed (continuing)", e)
             }
-            PairingActivity.applyDeviceConfig(repository, api, baseUrl, username, claim.token, claim.device_id)
+            try {
+                PairingActivity.applyDeviceConfig(repository, api, baseUrl, username, claim.token, claim.device_id)
+            } catch (e: Exception) {
+                Log.w(TAG, "Config sync after pairing failed (scheduled sync will retry)", e)
+            }
             SubscriberServiceManager(applicationContext).refresh()
             // Schedule the periodic agent-channel sync: an agent-driven pairing
             // may never open MainActivity

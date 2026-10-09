@@ -144,7 +144,13 @@ class PairingActivity : AppCompatActivity() {
                     } catch (e: Exception) {
                         Log.w(TAG, "User upsert after claim failed (continuing)", e)
                     }
-                    val added = applyDeviceConfig(repository, api, baseUrl, username, claim.token, claim.device_id)
+                    val added = try {
+                        applyDeviceConfig(repository, api, baseUrl, username, claim.token, claim.device_id)
+                    } catch (e: Exception) {
+                        // Pairing itself succeeded; the scheduled sync retries config
+                        Log.w(TAG, "Config sync after pairing failed (scheduled sync will retry)", e)
+                        0
+                    }
                     SubscriberServiceManager(this@PairingActivity).refresh()
                     // Schedule the periodic agent-channel sync here too: an
                     // agent-driven pairing may never open MainActivity
@@ -212,10 +218,12 @@ class PairingActivity : AppCompatActivity() {
             val user = User(baseUrl, username, token)
             val config = try {
                 api.deviceConfig(user, deviceId)
-            } catch (e: Exception) {
-                Log.w(TAG, "Cannot read device config", e)
-                null
-            } ?: return 0
+            } catch (e: ApiService.DeviceRevokedException) {
+                Log.e(TAG, "Device config rejected (revoked/unpaired) — not applying", e)
+                return 0
+            }
+            // Transient/parse failures propagate so the worker can retry and
+            // pairing callers can log without faking success (audit A11/#2)
             // Full management (config.manage == "full", set by the owner via the
             // agent channel): subscriptions absent from the config are removed.
             // Default stays add-only — removal remains a human action unless the
@@ -299,6 +307,13 @@ class PairingActivity : AppCompatActivity() {
                         )
                     }
                 }
+            }
+            // axon: tell the server this device applied the current config
+            // (#22) — non-fatal; staleness remains the server-side signal.
+            try {
+                api.deviceAppliedAck(user, deviceId)
+            } catch (e: Exception) {
+                Log.w(TAG, "Applied-ack failed (non-fatal)", e)
             }
             return added
         }
