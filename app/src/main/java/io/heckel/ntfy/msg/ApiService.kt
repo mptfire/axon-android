@@ -241,7 +241,7 @@ class ApiService(private val context: Context) {
     // DeviceRevokedException → auth rejected, stop syncing;
     // DeviceConfigFormatException → blob unusable, retry per caller;
     // IOException → transient, retry per caller.
-    suspend fun deviceConfig(user: User, deviceId: String): DeviceConfig? {
+    suspend fun deviceConfig(user: User, deviceId: String): DeviceConfig {
         val url = user.baseUrl.trimEnd('/') + "/v1/device/" + deviceId + "/config"
         val customHeaders = repository.getCustomHeaders(user.baseUrl)
         val request = HttpUtil.requestBuilder(url, user, customHeaders).build()

@@ -238,6 +238,10 @@ class PairingActivity : AppCompatActivity() {
             } catch (e: ApiService.DeviceRevokedException) {
                 Log.e(TAG, "Device config rejected (revoked/unpaired) — not applying", e)
                 return 0
+            } catch (e: Exception) {
+                // Transient/parse failures propagate so the worker can retry and
+                // pairing callers can log without faking success (audit A11/#2)
+                throw e
             }
             // Transient/parse failures propagate so the worker can retry and
             // pairing callers can log without faking success (audit A11/#2)
