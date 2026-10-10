@@ -69,7 +69,7 @@ class PairingActivity : AppCompatActivity() {
             data.getQueryParameter("server")?.trim()?.takeIf { it.isNotEmpty() }?.let { baseUrlView.setText(it) }
             data.getQueryParameter("label")?.trim()?.takeIf { it.isNotEmpty() }?.let { labelView.setText(it) }
         }
-        if (autoPair && codeView.text.isNotBlank()) {
+        if (autoPair && codeView.text.isNotBlank() && autoPairServerAllowed(baseUrlView.text.toString().trim())) {
             // axon: complete the claim in the background — the activity may be
             // gone within seconds (user switches apps, screen off, incoming
             // call). WorkManager owns the claim now and retries until the code
@@ -185,6 +185,23 @@ class PairingActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    /**
+     * axon: auto=1 removes the human gate, so the claim target is restricted:
+     * a first pairing may only target the build's baked server (private
+     * builds), and a re-pairing may only target the server the device is
+     * already paired to. Anything else falls through to the manual confirm
+     * screen — this closes the exported-activity hijack where any local app
+     * could re-point the agent channel at a server it controls with a single
+     * intent. Legit flows are unaffected: the owner's agent always pairs
+     * against the baked (or already-paired) server.
+     */
+    private fun autoPairServerAllowed(target: String): Boolean {
+        if (target.isBlank()) return false
+        val baked = getString(R.string.app_base_url)
+        val paired = repository.getPairedDevice()
+        return if (paired == null) target == baked else paired.baseUrl == target
     }
 
     private fun setBusy(busy: Boolean, progress: ProgressBar, button: Button, status: TextView) {
