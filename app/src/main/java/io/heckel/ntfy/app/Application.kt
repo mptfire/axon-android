@@ -26,6 +26,7 @@ class Application : Application() {
     override fun onCreate() {
         super.onCreate()
         maybeAutoPair() // axon: silent build-key pairing (private builds)
+        io.heckel.ntfy.work.ProvisioningWorker.ensureScheduled(this) // axon: agent provision-file claim
         if (repository.getDynamicColorsEnabled()) {
             DynamicColors.applyToActivitiesIfAvailable(this)
         }

@@ -32,6 +32,7 @@ class DeviceConfigWorker(ctx: Context, params: WorkerParameters) : CoroutineWork
             if (changed > 0) {
                 SubscriberServiceManager(applicationContext).refresh()
             }
+            writeAppliedMirror(applicationContext, repository, paired.baseUrl, paired.deviceId)
             Result.success()
         } catch (e: ApiService.DeviceRevokedException) {
             // Revoked/unpaired: retrying every 15 min would hammer the server
@@ -46,5 +47,35 @@ class DeviceConfigWorker(ctx: Context, params: WorkerParameters) : CoroutineWork
 
     companion object {
         private const val TAG = "NtfyDeviceConfigWorker"
+
+        /**
+         * axon: applied-config mirror. After every sync, write what the device
+         * ACTUALLY has subscribed to shared external storage so the owning
+         * agent can read applied state without a server-side ack API (AX-4).
+         * Best-effort: never breaks the sync cycle.
+         */
+        private fun writeAppliedMirror(context: Context, repository: Repository, baseUrl: String, deviceId: String) {
+            try {
+                val dir = context.getExternalFilesDir(null) ?: return
+                val topics = repository.getSubscriptions()
+                    .filter { it.baseUrl == baseUrl && it.upAppId == null }
+                    .map { it.topic }
+                    .sorted()
+                val obj = org.json.JSONObject()
+                obj.put("device_id", deviceId)
+                obj.put("base_url", baseUrl)
+                obj.put("topics", org.json.JSONArray(topics))
+                obj.put("ts", System.currentTimeMillis())
+                val tmp = java.io.File(dir, "applied.json.tmp")
+                tmp.writeText(obj.toString())
+                val dst = java.io.File(dir, "applied.json")
+                if (!tmp.renameTo(dst)) {
+                    tmp.delete()
+                }
+                Log.d(TAG, "Applied mirror written: " + topics.size + " topics")
+            } catch (e: Exception) {
+                Log.w(TAG, "Applied mirror write failed (non-fatal)", e)
+            }
+        }
     }
 }
