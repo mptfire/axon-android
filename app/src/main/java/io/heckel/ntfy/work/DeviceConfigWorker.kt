@@ -54,7 +54,7 @@ class DeviceConfigWorker(ctx: Context, params: WorkerParameters) : CoroutineWork
          * agent can read applied state without a server-side ack API (AX-4).
          * Best-effort: never breaks the sync cycle.
          */
-        private fun writeAppliedMirror(context: Context, repository: Repository, baseUrl: String, deviceId: String) {
+        private suspend fun writeAppliedMirror(context: Context, repository: Repository, baseUrl: String, deviceId: String) {
             try {
                 val dir = context.getExternalFilesDir(null) ?: return
                 val topics = repository.getSubscriptions()
