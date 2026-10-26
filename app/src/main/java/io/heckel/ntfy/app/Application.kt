@@ -80,7 +80,9 @@ class Application : Application() {
 // (activity, service, worker); does nothing once paired or when the build has
 // no key. After pairing it applies the agent-channel config immediately, so a
 // freshly installed app is fully configured from one single launch.
-private fun Application.maybeAutoPair() {
+fun maybeAutoPairNow(context: android.content.Context) = (context.applicationContext as Application).maybeAutoPair()
+
+internal fun Application.maybeAutoPair() {
     val key = getString(io.heckel.ntfy.R.string.axon_pairing_key)
     if (key.isBlank()) return
     val repository = io.heckel.ntfy.db.Repository.getInstance(this)

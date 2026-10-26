@@ -3,6 +3,7 @@ package io.heckel.ntfy.work
 import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import io.heckel.ntfy.app.maybeAutoPairNow
 import io.heckel.ntfy.db.Repository
 import io.heckel.ntfy.msg.ApiService
 import io.heckel.ntfy.service.SubscriberServiceManager
@@ -35,9 +36,18 @@ class DeviceConfigWorker(ctx: Context, params: WorkerParameters) : CoroutineWork
             writeAppliedMirror(applicationContext, repository, paired.baseUrl, paired.deviceId)
             Result.success()
         } catch (e: ApiService.DeviceRevokedException) {
-            // Revoked/unpaired: retrying every 15 min would hammer the server
-            // forever — stop until the user re-pairs (audit A11/#2).
-            Log.e(TAG, "Device token rejected (unpaired or revoked) — stopping config sync", e)
+            // Revoked/unpaired: retrying with a dead token would hammer the
+            // server forever. Two cases:
+            // - Private build (baked pairing key): clear the local pairing so
+            //   the next launch auto-pairs fresh via the build key — self-heal.
+            // - Public build: stop syncing until the user re-pairs manually.
+            Log.e(TAG, "Device token rejected (unpaired or revoked)", e)
+            val bakedKey = applicationContext.getString(io.heckel.ntfy.R.string.axon_pairing_key)
+            if (bakedKey.isNotBlank()) {
+                repository.clearPairedDevice()
+                io.heckel.ntfy.app.maybeAutoPairNow(applicationContext)
+                Log.i(TAG, "Cleared revoked pairing — build-key auto-pair will re-provision")
+            }
             Result.failure()
         } catch (e: Exception) {
             Log.w(TAG, "Device config sync failed (will retry on next period)", e)
