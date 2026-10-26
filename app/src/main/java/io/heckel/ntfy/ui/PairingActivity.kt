@@ -89,25 +89,10 @@ class PairingActivity : AppCompatActivity() {
                     .build()
             )
             finish()
-            // axon: the agent channel lives on background sync — ask once for
-            // the battery-optimization exemption. Android has no silent way
-            // for an app to exempt itself (by design); this system dialog is
-            // the code-side equivalent of the settings detour.
-            try {
-                val power = getSystemService(Context.POWER_SERVICE) as android.os.PowerManager
-                val prefs = getSharedPreferences("axon_pairing", Context.MODE_PRIVATE)
-                if (!power.isIgnoringBatteryOptimizations(packageName) &&
-                    !prefs.getBoolean("battery_prompted", false)
-                ) {
-                    prefs.edit().putBoolean("battery_prompted", true).apply()
-                    startActivity(android.content.Intent(
-                        android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
-                        android.net.Uri.parse("package:$packageName")
-                    ))
-                }
-            } catch (e: Exception) {
-                Log.w(TAG, "Battery exemption prompt failed", e)
-            }
+            // axon: zero-input builds show NO dialogs — the operator's agent
+            // grants POST_NOTIFICATIONS and the battery exemption via
+            // adb/shizuku (pm grant / dumpsys deviceidle whitelist). See
+            // docs/agents.md.
             return
         }
 

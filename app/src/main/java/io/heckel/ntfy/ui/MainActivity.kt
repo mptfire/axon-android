@@ -392,7 +392,11 @@ class MainActivity : AppCompatActivity(), AddFragment.SubscribeListener, Notific
         // Android 13 (SDK 33) requires that we ask for permission to post notifications
         // https://developer.android.com/develop/ui/views/notifications/notification-permission
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED) {
+        // axon: zero-input builds never prompt — the agent grants via adb
+        // (pm grant app.axon android.permission.POST_NOTIFICATIONS). Public
+        // builds keep upstream's prompt.
+        val privateBuild = getString(R.string.axon_pairing_key).isNotBlank()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !privateBuild && ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_DENIED) {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 0)
         }
     }
