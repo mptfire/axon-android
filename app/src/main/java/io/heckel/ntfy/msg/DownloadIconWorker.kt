@@ -65,8 +65,11 @@ class DownloadIconWorker(private val context: Context, params: WorkerParameters)
         val iconUrl = icon.url!! // Validated in doWork()
         Log.d(TAG, "Downloading icon from $iconUrl")
         try {
-            val user = repository.getUser(extractBaseUrl(iconUrl))
-            val customHeaders = repository.getCustomHeaders(extractBaseUrl(iconUrl))
+            // SEC-02: same-origin guard (see DownloadAttachmentWorker)
+            val targetBaseUrl = extractBaseUrl(iconUrl)
+            val sameOriginAsSubscription = targetBaseUrl.equals(subscription.baseUrl.trimEnd('/'), ignoreCase = true)
+            val user = if (sameOriginAsSubscription) repository.getUser(targetBaseUrl) else null
+            val customHeaders = if (sameOriginAsSubscription) repository.getCustomHeaders(targetBaseUrl) else emptyList()
             val request = HttpUtil.requestBuilder(iconUrl, user, customHeaders).build()
             val client = HttpUtil.defaultClient(context, extractBaseUrl(iconUrl))
             client.newCall(request).execute().use { response ->

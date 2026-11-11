@@ -66,8 +66,13 @@ class DownloadAttachmentWorker(private val context: Context, params: WorkerParam
         Log.d(TAG, "Downloading attachment from ${attachment.url}")
 
         try {
-            val user = repository.getUser(extractBaseUrl(attachment.url))
-            val customHeaders = repository.getCustomHeaders(extractBaseUrl(attachment.url))
+            // SEC-02: only attach stored credentials when the media URL is
+            // same-origin as the subscription's server — cross-origin
+            // redirects would otherwise forward them to third parties.
+            val targetBaseUrl = extractBaseUrl(attachment.url)
+            val sameOriginAsSubscription = targetBaseUrl.equals(subscription.baseUrl.trimEnd('/'), ignoreCase = true)
+            val user = if (sameOriginAsSubscription) repository.getUser(targetBaseUrl) else null
+            val customHeaders = if (sameOriginAsSubscription) repository.getCustomHeaders(targetBaseUrl) else emptyList()
             val request = HttpUtil.requestBuilder(attachment.url, user, customHeaders).build()
             val client = HttpUtil.longCallClient(context, extractBaseUrl(attachment.url))
             client.newCall(request).execute().use { response ->

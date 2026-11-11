@@ -24,6 +24,7 @@ class BroadcastService(private val ctx: Context) {
         intent.putExtra("base_url", subscription.baseUrl)
         intent.putExtra("topic", subscription.topic)
         intent.putExtra("time", notification.timestamp.toInt())
+        intent.putExtra("time_long", notification.timestamp) // BUG-05: full-precision timestamp
         intent.putExtra("title", notification.title)
         intent.putExtra("message", decodeMessage(notification))
         intent.putExtra("message_bytes", decodeBytesMessage(notification))
@@ -41,7 +42,7 @@ class BroadcastService(private val ctx: Context) {
         intent.putExtra("attachment_expires", notification.attachment?.expires ?: 0L)
         intent.putExtra("attachment_url", notification.attachment?.url ?: "")
 
-        Log.d(TAG, "Sending message intent broadcast: ${intent.action} with extras ${intent.extras}")
+        Log.d(TAG, "Sending message intent broadcast: ${intent.action} for notification ${notification.id}")
         ctx.sendBroadcast(intent)
     }
 
@@ -51,7 +52,7 @@ class BroadcastService(private val ctx: Context) {
         action.extras?.forEach { (key, value) ->
             intent.putExtra(key, value)
         }
-        Log.d(TAG, "Sending user action intent broadcast: ${intent.action} with extras ${intent.extras}")
+        Log.d(TAG, "Sending user action intent broadcast: ${intent.action} (extras redacted)")
         ctx.sendBroadcast(intent)
     }
 
@@ -61,7 +62,7 @@ class BroadcastService(private val ctx: Context) {
      */
     class BroadcastReceiver : android.content.BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            Log.d(TAG, "Broadcast received: $intent")
+            Log.d(TAG, "Broadcast received: action=${intent.action}")
             when (intent.action) {
                 MESSAGE_SEND_ACTION -> send(context, intent)
             }
@@ -87,7 +88,7 @@ class BroadcastService(private val ctx: Context) {
                 val repository = Repository.getInstance(ctx)
                 val user = repository.getUser(baseUrl) // May be null
                 try {
-                    Log.d(TAG, "Publishing message $intent")
+                    Log.d(TAG, "Publishing message via broadcast to topic $topic")
                     api.publish(
                         baseUrl = baseUrl,
                         topic = topic,

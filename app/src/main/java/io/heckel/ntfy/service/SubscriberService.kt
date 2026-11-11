@@ -425,14 +425,17 @@ class SubscriberService : Service() {
         wakeLock?.acquire(NOTIFICATION_RECEIVED_WAKELOCK_TIMEOUT_MILLIS)
 
         val url = topicUrl(subscription.baseUrl, subscription.topic)
-        Log.d(TAG, "[$url] Received notification: $notification")
-        GlobalScope.launch(Dispatchers.IO) {
+        // SEC-03: redact title/message/click — log id + event only
+        Log.d(TAG, "[$url] Received notification id=${notification.id}, event=${notification.event}")
+        // BUG-04: managed scope (GlobalScope is untracked)
+        (application as Application).ioScope.launch(Dispatchers.IO) {
             // This logic is (partially) duplicated in
             // - Android: SubscriberService::onNotificationReceived()
             // - Android: FirebaseService::onMessageReceived()
             // - Web app: hooks.js:handleNotification()
             // - Web app: sw.js:handleMessage(), sw.js:handleMessageClear(), ...
 
+            try {
             when (notification.event) {
                 ApiService.EVENT_MESSAGE_CLEAR -> {
                     if (notification.sequenceId.isNotEmpty()) {
@@ -455,7 +458,13 @@ class SubscriberService : Service() {
                     }
                 }
             }
-            wakeLock?.let { if (it.isHeld) { it.release() } }
+            } catch (e: Exception) {
+                Log.e(TAG, "[$url] Error processing notification ${notification.id}: ${e.message}", e)
+            } finally {
+                // BUG-04: always release — a dispatch/Room exception must not
+                // hold the partial wakelock for the full timeout
+                wakeLock?.let { if (it.isHeld) { it.release() } }
+            }
         }
     }
 

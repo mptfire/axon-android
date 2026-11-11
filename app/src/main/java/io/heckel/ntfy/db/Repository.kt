@@ -18,7 +18,7 @@ import io.heckel.ntfy.util.validUrl
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
-class Repository(private val sharedPrefs: SharedPreferences, database: Database) {
+class Repository(private val sharedPrefs: SharedPreferences, private val database: Database) {
     private val subscriptionDao = database.subscriptionDao()
     private val notificationDao = database.notificationDao()
     private val userDao = database.userDao()
@@ -99,8 +99,11 @@ class Repository(private val sharedPrefs: SharedPreferences, database: Database)
     @Suppress("RedundantSuspendModifier")
     @WorkerThread
     suspend fun removeSubscription(subscription: Subscription) {
-        notificationDao.removeAll(subscription.id)
-        subscriptionDao.remove(subscription.id)
+        // BUG-02: atomic — messages and the subscription row must not tear
+        database.runInTransaction {
+            notificationDao.removeAll(subscription.id)
+            subscriptionDao.remove(subscription.id)
+        }
         updateConnectionDetails(subscription.baseUrl, ConnectionState.NOT_APPLICABLE)
     }
 
@@ -135,17 +138,26 @@ class Repository(private val sharedPrefs: SharedPreferences, database: Database)
     @Suppress("RedundantSuspendModifier")
     @WorkerThread
     suspend fun addNotification(notification: Notification): Boolean {
-        val maybeExistingNotification = notificationDao.get(notification.id)
-        if (maybeExistingNotification != null || notification.event != ApiService.EVENT_MESSAGE) {
+        if (notification.event != ApiService.EVENT_MESSAGE) {
             return false
         }
-        // Mark old notifications with the same sequence ID as deleted (this is an update to an existing sequence)
-        if (notification.sequenceId.isNotEmpty()) {
-            notificationDao.markAsDeletedBySequenceId(notification.subscriptionId, notification.sequenceId)
+        // BUG-02: check-then-act + sequence delete + cursor update + insert
+        // must be atomic — concurrent WS + poll delivery could duplicate
+        // notifications or leave partial state.
+        var added = false
+        database.runInTransaction {
+            val maybeExistingNotification = notificationDao.getScoped(notification.id, notification.subscriptionId)
+            if (maybeExistingNotification == null) {
+                // Mark old notifications with the same sequence ID as deleted (this is an update to an existing sequence)
+                if (notification.sequenceId.isNotEmpty()) {
+                    notificationDao.markAsDeletedBySequenceId(notification.subscriptionId, notification.sequenceId)
+                }
+                subscriptionDao.updateLastNotificationId(notification.subscriptionId, notification.id)
+                notificationDao.add(notification)
+                added = true
+            }
         }
-        subscriptionDao.updateLastNotificationId(notification.subscriptionId, notification.id)
-        notificationDao.add(notification)
-        return true
+        return added
     }
 
     fun updateNotification(notification: Notification) {
@@ -531,8 +543,11 @@ class Repository(private val sharedPrefs: SharedPreferences, database: Database)
     }
 
     suspend fun updateCustomHeader(oldHeader: CustomHeader, newHeader: CustomHeader) {
-        customHeaderDao.delete(oldHeader.baseUrl, oldHeader.name)
-        customHeaderDao.insert(newHeader)
+        // BUG-02: atomic delete+insert
+        database.runInTransaction {
+            customHeaderDao.delete(oldHeader.baseUrl, oldHeader.name)
+            customHeaderDao.insert(newHeader)
+        }
     }
 
     suspend fun deleteCustomHeader(header: CustomHeader) {

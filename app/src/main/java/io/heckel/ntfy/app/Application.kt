@@ -82,14 +82,21 @@ class Application : Application() {
 // freshly installed app is fully configured from one single launch.
 fun maybeAutoPairNow(context: android.content.Context) = (context.applicationContext as Application).maybeAutoPair()
 
+internal val autoPairInFlight = java.util.concurrent.atomic.AtomicBoolean(false)
+
 internal fun Application.maybeAutoPair() {
     val key = getString(io.heckel.ntfy.R.string.axon_pairing_key)
     if (key.isBlank()) return
     val repository = io.heckel.ntfy.db.Repository.getInstance(this)
     if (repository.getPairedDevice() != null) return
+    // REL-04: concurrent entry points (onCreate + maybeAutoPairNow) must not
+    // race the HTTP claim — one in-flight auto-pair at a time.
+    if (!autoPairInFlight.compareAndSet(false, true)) return
     val baseUrl = getString(io.heckel.ntfy.R.string.app_base_url)
-    kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+    ioScope.launch {
         try {
+            // Re-check inside the flight: the first caller may have finished.
+            if (repository.getPairedDevice() != null) return@launch
             val api = io.heckel.ntfy.msg.ApiService(this@maybeAutoPair)
             val claim = api.pairDeviceWithBuildKey(baseUrl, key, android.os.Build.MODEL ?: "device")
             val username = try {
@@ -126,6 +133,8 @@ internal fun Application.maybeAutoPair() {
             io.heckel.ntfy.util.Log.i("NtfyAutoPair", "Device auto-paired via build key: " + claim.device_id)
         } catch (e: Exception) {
             io.heckel.ntfy.util.Log.w("NtfyAutoPair", "Auto-pairing failed (will retry on next launch)", e)
+        } finally {
+            autoPairInFlight.set(false)
         }
     }
 }
