@@ -120,7 +120,22 @@ class WsConnection(
                     null
                 )
             } else {
-                Log.d(TAG, "SCHEDULE_EXACT_ALARM permission denied: Failed to reschedule websocket connection")
+                // REL-02: never silently drop the reconnect — fall back to an
+                // inexact alarm AND a coroutine delay (MIUI revokes
+                // SCHEDULE_EXACT_ALARM; the process is usually still alive).
+                Log.w(TAG, "SCHEDULE_EXACT_ALARM not granted: using inexact alarm + coroutine fallback")
+                alarmManager.setWindow(
+                    AlarmManager.RTC_WAKEUP,
+                    reconnectTime.timeInMillis,
+                    5_000L,
+                    RECONNECT_TAG,
+                    { startOnBackgroundThread() },
+                    null
+                )
+                scope.launch {
+                    kotlinx.coroutines.delay(seconds * 1000L + 1_000L)
+                    start()
+                }
             }
         } else {
             alarmManager.setExact(
@@ -147,7 +162,7 @@ class WsConnection(
 
         override fun onMessage(webSocket: WebSocket, text: String) {
             synchronize("onMessage") {
-                Log.d(TAG, "$shortUrl (gid=$globalId, lid=$id): Received message: $text")
+                Log.d(TAG, "$shortUrl (gid=$globalId, lid=$id): Message received (${text.length} chars, redacted)")
                 val notificationWithTopic = parser.parseWithTopic(text, subscriptionId = 0, baseUrl = baseUrl)
                 if (notificationWithTopic == null) {
                     Log.d(TAG, "$shortUrl (gid=$globalId, lid=$id): Irrelevant or unknown message. Discarding.")
@@ -164,8 +179,16 @@ class WsConnection(
 
         override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
             synchronize("onClosed") {
-                Log.w(TAG, "$shortUrl (gid=$globalId, lid=$id): Closed connection")
+                Log.w(TAG, "$shortUrl (gid=$globalId, lid=$id): Server closed connection (code=$code, reason=$reason)")
                 state = State.Disconnected
+                // REL-01: a clean server close (nginx restart/deploy) must
+                // still reconnect — otherwise the connection dies until a
+                // network handoff or service restart.
+                if (!closed) {
+                    errorCount++
+                    val retrySeconds = RETRY_SECONDS.getOrNull(errorCount - 1) ?: RETRY_SECONDS.last()
+                    scheduleReconnect(retrySeconds)
+                }
             }
         }
 

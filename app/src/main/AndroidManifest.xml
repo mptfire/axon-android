@@ -172,7 +172,7 @@
         <receiver
                 android:name=".msg.BroadcastService$BroadcastReceiver"
                 android:enabled="true"
-                android:exported="true">
+                android:exported="false">
             <intent-filter>
                 <action android:name="io.heckel.ntfy.SEND_MESSAGE"/>
             </intent-filter>

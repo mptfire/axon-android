@@ -575,10 +575,25 @@ interface SubscriptionDao {
         LEFT JOIN Notification AS n ON s.id = n.subscriptionId AND n.deleted != 1
         WHERE s.id IN (:subscriptionIds) AND s.lastNotificationId IS NOT NULL
         GROUP BY s.id
-        ORDER BY MAX(n.timestamp) DESC
+        // REL-03: pick the LAGGING topic's cursor (oldest max), not the
+        // newest — a noisy topic advancing the cursor during a disconnect
+        // must not cause quiet topics sharing the connection to skip
+        // messages. Replayed messages dedupe via OnConflictStrategy.IGNORE.
+        ORDER BY IFNULL(MAX(n.timestamp), 0) ASC
         LIMIT 1
     """)
     fun getLastNotificationId(subscriptionIds: Collection<Long>): String?
+
+    // BUG-01: composite PK is (id, subscriptionId) — id-only queries can
+    // match the wrong row when two subscriptions receive the same id.
+    @Query("SELECT * FROM notification WHERE id = :notificationId AND subscriptionId = :subscriptionId")
+    fun getScoped(notificationId: String, subscriptionId: Long): Notification?
+
+    @Query("UPDATE notification SET deleted = 1 WHERE id = :notificationId AND subscriptionId = :subscriptionId")
+    fun markAsDeletedScoped(notificationId: String, subscriptionId: Long)
+
+    @Query("UPDATE notification SET deleted = 0 WHERE id = :notificationId AND subscriptionId = :subscriptionId")
+    fun undeleteScoped(notificationId: String, subscriptionId: Long)
 
     @Query("UPDATE subscription SET icon = :icon WHERE id = :subscriptionId")
     fun updateSubscriptionIcon(subscriptionId: Long, icon: String?)
